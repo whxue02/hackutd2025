@@ -15,14 +15,19 @@ def _load_model():
         try:
             model_path = os.path.join(os.path.dirname(__file__), 'loan_model.pkl')
             features_path = os.path.join(os.path.dirname(__file__), 'model_features.pkl')
-            if os.path.exists(model_path):
+            if os.path.exists(model_path) and os.path.exists(features_path):
                 with open(model_path, 'rb') as f:
                     _model = pickle.load(f)
                 with open(features_path, 'rb') as f:
                     _feature_names = pickle.load(f)
-                print("Model loaded successfully")
+                print("[MODEL] Model loaded successfully")
+                print(f"[MODEL] Feature names: {_feature_names}")
+            else:
+                print(f"[MODEL] Model files not found. Model path exists: {os.path.exists(model_path)}, Features path exists: {os.path.exists(features_path)}")
         except Exception as e:
-            print(f"Could not load model: {e}. Using rule-based prediction.")
+            print(f"[MODEL] Could not load model: {e}")
+            import traceback
+            traceback.print_exc()
 
 def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, education, self_employed):
     """
@@ -44,6 +49,9 @@ def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, edu
     
     if _model is not None and _feature_names is not None:
         try:
+            print(f"[MODEL] Using trained model for prediction")
+            print(f"[MODEL] Input features - income: {income_annum}, loan_amount: {loan_amount}, loan_term: {loan_term}, credit: {cibil_score}, education: {education}, self_employed: {self_employed}")
+            
             # Create feature vector matching the model's expected format
             # The model expects: income_annum, loan_amount, loan_term, cibil_score, education, self_employed
             # Plus other features that were in the training data (set to 0 or median)
@@ -65,14 +73,19 @@ def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, edu
             for feature in _feature_names:
                 if feature not in features.columns:
                     features[feature] = 0
+                    print(f"[MODEL] Added missing feature: {feature} = 0")
             
             # Reorder columns to match training data
             features = features[_feature_names]
+            print(f"[MODEL] Feature vector shape: {features.shape}")
+            print(f"[MODEL] Feature vector columns: {list(features.columns)}")
             
             # Predict
             prediction = _model.predict(features)[0]
             proba = _model.predict_proba(features)[0]
             probability = proba[1] if len(proba) > 1 else proba[0]
+            
+            print(f"[MODEL] Prediction: {prediction}, Probability: {probability}")
             
             return {
                 "approved": bool(prediction),
@@ -81,7 +94,12 @@ def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, edu
                 "reason": "Model prediction based on your profile" if prediction else "Model indicates loan may not be approved based on your profile"
             }
         except Exception as e:
-            print(f"Error using model: {e}. Falling back to rule-based prediction.")
+            print(f"[MODEL] Error using model: {e}")
+            import traceback
+            traceback.print_exc()
+            print("[MODEL] Falling back to rule-based prediction.")
+    else:
+        print("[MODEL] Model not available, using rule-based prediction.")
     
     # Fallback: Rule-based prediction
     loan_to_income_ratio = loan_amount / income_annum if income_annum > 0 else 999
