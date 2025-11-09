@@ -139,7 +139,7 @@ export function CarDetail() {
             </div>
             <div>
               <h1 style={{ margin: 0, fontSize: '20px', color: '#e6eef8' }}>
-                {car.make} {car.model}
+                {car.hack_id} {car.model}
               </h1>
               <p style={{ margin: 0, color: '#9aa4b2', fontSize: '13px' }}>
                 Model {car.year}
@@ -338,9 +338,9 @@ export function CarDetail() {
               gap: '8px',
               boxShadow: '0 12px 30px rgba(2,6,23,0.6)'
             }}>
-              <div style={{ color: '#9aa4b2', fontSize: '12px' }}>MSRP</div>
+              <div style={{ color: '#9aa4b2', fontSize: '12px' }}>Estimated Cost</div>
               <div style={{ fontWeight: '700', fontSize: '18px', color: '#e6eef8' }}>
-                ${car.msrp.toLocaleString()}
+                ${car.estimated_current_cost.toLocaleString()}
               </div>
               <div style={{ color: '#9aa4b2', fontSize: '11px' }}>
                 Est. Value 2027: ${car.expected_value_2027.toLocaleString()}
