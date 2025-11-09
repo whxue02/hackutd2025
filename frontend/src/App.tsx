@@ -32,11 +32,13 @@ export default function App() {
   };
 
   const handleQuizComplete = (answers: QuizAnswers) => {
-    setQuizAnswers(answers);
+    console.log("🔄 [App] QUIZ COMPLETED - Setting new quiz answers");
+    console.log("🔄 [App] Previous quizAnswers:", quizAnswers);
+    console.log("🔄 [App] New answers received:", JSON.stringify(answers, null, 2));
+    setQuizAnswers(answers); // This should update the state
     setShowQuiz(false);
     setDisplayMode("swipe");
-    // You can use the quiz answers here to filter/recommend cars
-    console.log("Quiz answers:", answers);
+    console.log("🔄 [App] quizAnswers state updated. New value will be passed to AllGridView.");
   };
 
   const handleQuizBack = () => {
@@ -150,10 +152,10 @@ export default function App() {
           />
         ) : (
           <AllGridView
-            cars={carData}
             selectedIds={selectedForComparison}
             onToggleSelect={handleToggleSelection}
             onCompare={() => setViewMode('compare')}
+            quizAnswers={quizAnswers}
           />
         )}
       </main>
