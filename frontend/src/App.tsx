@@ -30,63 +30,68 @@ function MainApp() {
   const [chatRequested, setChatRequested] = useState(false);
   const [tradeInRequested, setTradeInRequested] = useState(false);
 
-  // ===== Added: handlers for the two floating buttons (no modal implementation) =====
+  // ===== Added: modal state & inputs for trade-in =====
+  const [showTradeModal, setShowTradeModal] = useState(false);
+  const [tradeYear, setTradeYear] = useState("");
+  const [tradeMake, setTradeMake] = useState("");
+  const [tradeModel, setTradeModel] = useState("");
+  const [tradeLoading, setTradeLoading] = useState(false);
+  const [tradeResult, setTradeResult] = useState<any>(null);
+  const [tradeError, setTradeError] = useState<string | null>(null);
+
+  // ===== Updated: handlers for the two floating buttons (modal implementation) =====
   const handleOpenChatbot = () => {
     console.log("Chatbot button clicked");
     setChatRequested(true);
     // Placeholder: open chatbot modal here
   };
 
-  const handleOpenTradeIn = async () => {
-    console.log("Trade-in button clicked");
+  const handleOpenTradeIn = () => {
+    console.log("Trade-in button clicked (open modal)");
     setTradeInRequested(true);
+    // reset modal state
+    setTradeYear("");
+    setTradeMake("");
+    setTradeModel("");
+    setTradeResult(null);
+    setTradeError(null);
+    setShowTradeModal(true);
+  };
 
-    // Ask the user for the car they own
-    const year = window.prompt("Enter the year of your car (e.g., 2023):")?.trim();
-    if (!year) {
-      console.log("Trade-in aborted: no year provided");
-      return;
-    }
-    const make = window.prompt("Enter the make of your car (e.g., Toyota):")?.trim();
-    if (!make) {
-      console.log("Trade-in aborted: no make provided");
-      return;
-    }
-    const model = window.prompt("Enter the model of your car (e.g., Corolla):")?.trim();
-    if (!model) {
-      console.log("Trade-in aborted: no model provided");
+  // New: submit handler for the trade modal (replaces prompt flow)
+  const handleSubmitTrade = async () => {
+    setTradeError(null);
+    setTradeResult(null);
+
+    if (!tradeYear.trim() || !tradeMake.trim() || !tradeModel.trim()) {
+      setTradeError("Please fill year, make and model.");
       return;
     }
 
-    // Use quizAnswers for city/state if available; otherwise prompt the user
+    // Use quizAnswers for city/state if available
     const qa: any = quizAnswers;
     let city = qa?.city || qa?.cityName || qa?.location?.city;
     let stateAc = qa?.['state-ac'] || qa?.state || qa?.stateAc || qa?.stateAbbr;
 
     if (!city) {
-      city = window.prompt("Enter your city (e.g., dallas):")?.trim();
-      if (!city) {
-        console.log("Trade-in aborted: no city provided");
-        return;
-      }
+      setTradeError("No city available from quiz. Please complete the quiz or provide location.");
+      // You may want to prompt user to take quiz or add location inputs; for now require quiz data
+      return;
     }
     if (!stateAc) {
-      stateAc = window.prompt("Enter your state abbreviation (e.g., TX):")?.trim();
-      if (!stateAc) {
-        console.log("Trade-in aborted: no state provided");
-        return;
-      }
+      setTradeError("No state available from quiz. Please complete the quiz or provide location.");
+      return;
     }
 
     const payload = {
-      year,
-      make,
-      model,
+      year: tradeYear.trim(),
+      make: tradeMake.trim(),
+      model: tradeModel.trim(),
       city: city.toLowerCase(),
-      // use the exact JSON key "state-ac"
       ['state-ac']: stateAc.toLowerCase(),
     };
 
+    setTradeLoading(true);
     try {
       const res = await fetch("http://127.0.0.1:5001/trade-in-value", {
         method: "POST",
@@ -97,26 +102,24 @@ function MainApp() {
       if (!res.ok) {
         const text = await res.text();
         console.error("Trade-in API error:", res.status, text);
-        alert(`Trade-in service returned ${res.status}`);
+        setTradeError(`Trade-in service returned ${res.status}`);
+        setTradeLoading(false);
         return;
       }
 
       const data = await res.json();
       console.log("Trade-in response:", data);
-      // Extract a sensible scalar result if possible (handles {"trade-in-value": 20359})
+
       const extractResult = (d: any) => {
         if (d == null) return "No result";
         if (typeof d === "string" || typeof d === "number" || typeof d === "boolean") return d;
         if (typeof d === "object") {
-          // Common key variations to look for
           const keysToCheck = ["trade-in-value", "tradeInValue", "trade_in_value", "value", "tradeIn", "amount"];
           for (const k of keysToCheck) {
             if (k in d) return d[k];
           }
-          // If object has a single key, return its value
           const objKeys = Object.keys(d);
           if (objKeys.length === 1) return d[objKeys[0]];
-          // try nested common wrappers
           for (const wrapper of ["result", "data", "payload"]) {
             if (wrapper in d) {
               const inner = d[wrapper];
@@ -127,17 +130,18 @@ function MainApp() {
               } else return inner;
             }
           }
-          // fallback: return the whole object as pretty JSON
           return JSON.stringify(d, null, 2);
         }
         return String(d);
       };
 
       const resultValue = extractResult(data);
-      alert("Trade-in result:\n" + resultValue);
+      setTradeResult(resultValue);
+      setTradeLoading(false);
     } catch (err) {
       console.error("Trade-in request failed:", err);
-      alert("Failed to contact trade-in service.");
+      setTradeError("Failed to contact trade-in service.");
+      setTradeLoading(false);
     }
   };
 
@@ -351,6 +355,87 @@ function MainApp() {
           </button>
         </div>
       </div>
+
+      {/* ===== New: Trade-in Modal + overlay ===== */}
+      {showTradeModal && (
+        <>
+          {/* overlay that blurs background */}
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowTradeModal(false)}
+            aria-hidden
+          />
+
+          {/* centered modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            <div
+              className="w-full max-w-md bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-2xl p-6 relative"
+              role="dialog"
+              aria-modal="true"
+            >
+              {/* close X */}
+              <button
+                onClick={() => setShowTradeModal(false)}
+                aria-label="Close trade modal"
+                className="absolute right-3 top-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
+              >
+                <span className="text-xl font-semibold">✕</span>
+              </button>
+
+              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Get Trade-in Value</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Enter your car details to estimate trade-in value.</p>
+
+              <div className="space-y-3">
+                <input
+                  value={tradeYear}
+                  onChange={(e) => setTradeYear(e.target.value)}
+                  placeholder="Year (e.g., 2023)"
+                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  value={tradeMake}
+                  onChange={(e) => setTradeMake(e.target.value)}
+                  placeholder="Make (e.g., Toyota)"
+                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <input
+                  value={tradeModel}
+                  onChange={(e) => setTradeModel(e.target.value)}
+                  placeholder="Model (e.g., Corolla)"
+                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+
+              {/* feedback area */}
+              <div className="mt-4">
+                {tradeError && <div className="text-sm text-red-600 mb-2">{tradeError}</div>}
+                {tradeResult != null && (
+                  <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md mb-2">
+                    <strong>Result:</strong>
+                    <div className="whitespace-pre-wrap">{String(tradeResult)}</div>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 flex items-center gap-3">
+                <button
+                  onClick={handleSubmitTrade}
+                  disabled={tradeLoading}
+                  className="flex-1 inline-flex justify-center items-center bg-primary text-white px-4 py-2 rounded-lg hover:opacity-95 disabled:opacity-50"
+                >
+                  {tradeLoading ? "Getting value..." : "Get Value"}
+                </button>
+                <button
+                  onClick={() => setShowTradeModal(false)}
+                  className="px-4 py-2 rounded-lg border border-gray-200 bg-transparent text-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
     </div>
   );
