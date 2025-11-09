@@ -1,7 +1,7 @@
 import pandas as pd
 
 # read the CSV file
-df = pd.read_csv('toyota_trims_2020_onwards.csv')
+df = pd.read_csv('data/toyota_trims_2020_onwards.csv')
 df['year'] = df['year'] + 5
 def update_hack_id(hack_id):
     year_str = hack_id[:4]
@@ -32,6 +32,9 @@ df['expected_value_2027'] = df.apply(calculate_expected_value_2027, axis=1)
 
 # add empty column for img_path
 df['img_path'] = ''
+
+# randomize the order of rows
+df = df.sample(frac=1, random_state=42).reset_index(drop=True)
 
 # save the processed CSV
 df.to_csv('car_data_processed.csv', index=False)
