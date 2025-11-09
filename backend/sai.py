@@ -580,14 +580,53 @@ def predict_loan():
     except:
         return {"error": "No data provided"}, 400
     
+    # LOG RAW JSON RECEIVED FROM FRONTEND
+    import json
+    print("\n" + "="*60)
+    print("[BACKEND] ====== RAW JSON RECEIVED FROM FRONTEND ======")
+    print(json.dumps(data, indent=2))
+    print("="*60)
+    
     try:
-        # Extract quiz answers and car price
+        # Extract quiz answers and car MSRP FROM THE JSON DATA
         income_annum = float(data.get("annualIncome", 0))
         credit_score = int(data.get("creditScore", 0))
         is_college_grad = 1 if data.get("isCollegeGrad") else 0
         is_self_employed = 1 if data.get("isSelfEmployed") else 0
-        loan_amount = float(data.get("loanAmount", 0))  # Car MSRP
+        loan_amount = float(data.get("loanAmount", 0))  # THIS IS THE CAR'S MSRP FROM FRONTEND
         loan_term = int(data.get("loanTerm", 5))  # Default 5 years
+        
+        print(f"[BACKEND] EXTRACTED VALUES:")
+        print(f"  - annualIncome from JSON: {data.get('annualIncome')} -> parsed: {income_annum}")
+        print(f"  - creditScore from JSON: {data.get('creditScore')} -> parsed: {credit_score}")
+        print(f"  - isCollegeGrad from JSON: {data.get('isCollegeGrad')} -> parsed: {is_college_grad}")
+        print(f"  - isSelfEmployed from JSON: {data.get('isSelfEmployed')} -> parsed: {is_self_employed}")
+        print(f"  - loanAmount (MSRP) from JSON: {data.get('loanAmount')} -> parsed: {loan_amount}")
+        print(f"  - loanTerm from JSON: {data.get('loanTerm')} -> parsed: {loan_term}")
+        
+        # Validate inputs
+        if loan_amount <= 0:
+            print(f"ERROR: Invalid loan amount (MSRP): {loan_amount}")
+            return {"error": f"Invalid car MSRP: {loan_amount}"}, 400
+        
+        if income_annum <= 0:
+            print(f"ERROR: Invalid annual income: {income_annum}")
+            return {"error": f"Invalid annual income: {income_annum}"}, 400
+        
+        if credit_score < 300 or credit_score > 850:
+            print(f"ERROR: Invalid credit score: {credit_score}")
+            return {"error": f"Invalid credit score: {credit_score}"}, 400
+        
+        # Log MSRP being used in prediction (THIS IS THE ACTUAL CAR MSRP)
+        print(f"\n[Loan Prediction] ====== NEW PREDICTION REQUEST ======")
+        print(f"[Loan Prediction] Received from frontend:")
+        print(f"  - Annual Income: ${income_annum:,.2f}")
+        print(f"  - Credit Score: {credit_score}")
+        print(f"  - College Grad: {is_college_grad}")
+        print(f"  - Self Employed: {is_self_employed}")
+        print(f"  - Loan Amount (CAR MSRP): ${loan_amount:,.2f} <-- THIS IS THE CAR'S ACTUAL MSRP")
+        print(f"  - Loan Term: {loan_term} years")
+        print(f"[Loan Prediction] Sending to ML model with MSRP: ${loan_amount:,.2f}")
         
         # Import prediction function
         from predict_loan import predict_loan_approval
