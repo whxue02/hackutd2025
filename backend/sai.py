@@ -37,15 +37,11 @@ def outbound_call():
     except:
         data = None
 
-    if data is None:
-        return {"error": "No data provided"}, 400
-
     try:
         phone_number = data["phone_number"]
         print(phone_number)
     except Exception as e:
-        print(e)
-        return {"error": "Missing data"}, 400
+        phone_number = os.getenv("PHONE_NUMBER")
 
     # Make outbound call via third-party service
     # (Implementation depends on the service being used)

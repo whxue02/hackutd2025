@@ -5,7 +5,7 @@ import { Button } from "./ui/button";
 import { useNavigate } from "react-router-dom";
 import { QuizAnswers } from "./Quiz";
 import { predictLoanApproval, LoanPrediction } from "../utils/loanPrediction";
-import { CheckCircle, XCircle, DollarSign, Loader2 } from "lucide-react";
+import { CheckCircle, XCircle, DollarSign, Loader2, PhoneCall } from "lucide-react";
 
 interface AllGridViewProps {
   selectedIds?: string[];
@@ -50,6 +50,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
   const [selectedCarForLoan, setSelectedCarForLoan] = useState<Car | null>(null);
   const [loanPrediction, setLoanPrediction] = useState<LoanPrediction | null>(null);
   const [loanLoading, setLoanLoading] = useState(false);
+  const [callLoading, setCallLoading] = useState<{[id: string]: boolean}>({}); // track per-car call loading if desired
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -156,6 +157,29 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
     }
   };
 
+  // handler to POST to dealer-call with no data
+  const handleDealerCall = async (carId?: string) => {
+    try {
+      if (carId) setCallLoading(prev => ({ ...prev, [carId]: true }));
+      else {} // no-op if no id given
+
+      const res = await fetch("http://127.0.0.1:5001/dealer-call", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        console.error("Dealer call failed:", res.status, text);
+      } else {
+        console.log("Dealer call triggered");
+      }
+    } catch (err) {
+      console.error("Error calling dealer:", err);
+    } finally {
+      if (carId) setCallLoading(prev => ({ ...prev, [carId]: false }));
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-screen">
@@ -186,6 +210,8 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {cars.map((car) => {
           const selected = selectedIds.includes(car.id);
+          const isCalling = !!callLoading[car.id];
+
           return (
             <div key={car.id} className={`relative rounded-xl overflow-hidden border-2 transition-all ${selected ? 'ring-2 ring-primary/70 border-primary/60' : 'bg-gradient-to-br from-gray-900 via-gray-800 to-black hover:border-primary/50 hover:shadow-md hover:shadow-primary/20'}`}>
               <div
@@ -199,6 +225,21 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
                     <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white border-0 px-3 py-1 shadow-lg shadow-primary/50 italic text-xs">
                       {car.category}
                     </Badge>
+                  </div>
+
+                  {/* phone call button positioned bottom-right of the image */}
+                  <div className="absolute bottom-3 right-3">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleDealerCall(car.id); }}
+                      disabled={isCalling}
+                      aria-label="Call dealer"
+                      className={`flex items-center justify-center w-10 h-10 rounded-full bg-primary/95 text-white shadow-lg hover:scale-105 transition-transform ${
+                        isCalling ? "opacity-60 cursor-not-allowed" : ""
+                      }`}
+                    >
+                      <PhoneCall className="w-4 h-4" />
+                    </button>
                   </div>
                 </div>
 
