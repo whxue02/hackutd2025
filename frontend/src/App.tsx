@@ -272,6 +272,25 @@ function MainApp() {
     return { isCurrency: false, formatted: String(val) };
   };
 
+  // Inject Inter font from Google Fonts and set it as the app's default font
+  useEffect(() => {
+    const id = "inter-google-font";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id = id;
+      link.rel = "stylesheet";
+      link.href = "https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap";
+      document.head.appendChild(link);
+    }
+    // set root font-family so app inherits Inter
+    const prev = document.documentElement.style.fontFamily;
+    document.documentElement.style.fontFamily = "Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial";
+    return () => {
+      // restore previous inline style if component unmounts
+      document.documentElement.style.fontFamily = prev || "";
+    };
+  }, []);
+
   if (showLanding) {
     return <LandingPage onNavigate={handleNavigateFromLanding} />;
   }
@@ -300,7 +319,7 @@ function MainApp() {
 />
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       {/* Animated background grid effect */}
-      <header className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-sm shadow-lg shadow-primary/10 border-b border-primary/30 sticky top-0 z-50">
+      <header className="relative bg-gradient-to-br from-white-900/95 via-white-800/95 to-white/95 backdrop-blur-sm shadow-lg shadow-primary/10 border-b border-primary/30 sticky top-0 z-50">
   <div className="max-w-7xl mx-auto px-6 py-4">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">
@@ -315,8 +334,8 @@ function MainApp() {
           />
         </div>
         <div>
-          <h1 className="text-white italic tracking-wide" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>AutoMatch</h1>
-          <p className="text-gray-400 italic">Find YOUR Ride-or-Die</p>
+          <h1 className="text-black tracking-wide" style={{ fontFamily: 'Inter, sans-serif', fontStyle: 'extrabold', color: "#000" }}>AutoMatch</h1>
+          <p className="text-gray-400 italic" style={{ color: "#212121"}}>Find YOUR Ride-or-Die</p>
         </div>
       </div>
 
@@ -333,14 +352,16 @@ function MainApp() {
     {/* View toggle */}
     <div className="flex items-center gap-3 justify-center">
       <button
-        className={`px-5 py-2.5 italic rounded-md ${displayMode === 'swipe' ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-transparent text-gray-300 border border-gray-700'}`}
+        className={`px-5 py-2.5 italic rounded-full ${displayMode === 'swipe' ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'text-lg !bg-white hover:!bg-black/20 shadow-lg group rounded-full border-2 border-gray-200 !text-black'}`}
         onClick={() => setDisplayMode('swipe')}
+        style={displayMode === 'swipe' ?  { backgroundColor: "#e4000d", cursor: "pointer" } : { backgroundColor: "#ffffff", color: "#000000", borderColor: "#eeeeee", cursor: "pointer" }}
       >
         Swipe
       </button>
       <button
-        className={`px-5 py-2.5 italic rounded-md ${displayMode === 'all' ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-transparent text-gray-300 border border-gray-700'}`}
+        className={`px-5 py-2.5 italic rounded-full ${displayMode === 'all' ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'text-lg !bg-white hover:!bg-black/20 shadow-lg group rounded-full border-2 border-gray-200 !text-black'}`}
         onClick={() => setDisplayMode('all')}
+        style={displayMode === 'all' ?  { backgroundColor: "#e4000d", cursor: "pointer" } : { backgroundColor: "#ffffff", color: "#000000", borderColor: "#eeeeee", cursor: "pointer" }}
       >
         All
       </button>
@@ -572,3 +593,4 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
