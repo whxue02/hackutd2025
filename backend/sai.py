@@ -657,14 +657,34 @@ def predict_loan():
     except:
         return {"error": "No data provided"}, 400
     
+    print("============================================================")
+    print("[LOAN PREDICTION] ====== RAW JSON RECEIVED FROM FRONTEND ======")
+    print(json.dumps(data, indent=2))
+    print("============================================================")
+    
     try:
-        # Extract quiz answers and car price
-        income_annum = float(data.get("annualIncome", 0))
-        credit_score = int(data.get("creditScore", 0))
+        # Extract quiz answers and car price - NO DEFAULTS, REQUIRE ALL VALUES
+        if "annualIncome" not in data or not data["annualIncome"]:
+            raise ValueError("annualIncome is required and cannot be empty")
+        if "creditScore" not in data or not data["creditScore"]:
+            raise ValueError("creditScore is required and cannot be empty")
+        if "loanAmount" not in data or not data["loanAmount"]:
+            raise ValueError("loanAmount is required and cannot be empty")
+        
+        income_annum = float(data["annualIncome"])
+        credit_score = int(data["creditScore"])
         is_college_grad = 1 if data.get("isCollegeGrad") else 0
         is_self_employed = 1 if data.get("isSelfEmployed") else 0
-        loan_amount = float(data.get("loanAmount", 0))  # Car MSRP
+        loan_amount = float(data["loanAmount"])  # Car MSRP
         loan_term = int(data.get("loanTerm", 5))  # Default 5 years
+        
+        print("[LOAN PREDICTION] EXTRACTED VALUES:")
+        print(f"  - annualIncome from JSON: {data.get('annualIncome')} -> parsed: {income_annum}")
+        print(f"  - creditScore from JSON: {data.get('creditScore')} -> parsed: {credit_score}")
+        print(f"  - isCollegeGrad from JSON: {data.get('isCollegeGrad')} -> parsed: {is_college_grad}")
+        print(f"  - isSelfEmployed from JSON: {data.get('isSelfEmployed')} -> parsed: {is_self_employed}")
+        print(f"  - loanAmount (MSRP) from JSON: {data.get('loanAmount')} -> parsed: {loan_amount}")
+        print(f"  - loanTerm from JSON: {data.get('loanTerm', 5)} -> parsed: {loan_term}")
         
         # Import prediction function
         from predict_loan import predict_loan_approval
@@ -679,9 +699,13 @@ def predict_loan():
             self_employed=is_self_employed
         )
         
+        print("[LOAN PREDICTION] Result:", result)
+        print("============================================================")
         return result, 200
     except Exception as e:
-        print(f"Error in loan prediction: {e}")
+        print(f"[LOAN PREDICTION] Error in loan prediction: {e}")
+        import traceback
+        traceback.print_exc()
         return {"error": str(e)}, 500
 
 

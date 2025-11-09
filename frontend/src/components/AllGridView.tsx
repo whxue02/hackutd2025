@@ -69,7 +69,8 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
   const handleCheckLoanApproval = async (car: Car) => {
     console.log("========== NEW CAR CLICKED ==========");
     console.log("[AllGridView] Check Loan Approval clicked for:", car.make, car.model, car.year);
-    console.log("[AllGridView] Car Estimated Cost (from car object):", car.financing?.estimated_current_cost);
+    console.log("[AllGridView] Car MSRP (from car.financing.msrp):", car.financing?.msrp);
+    console.log("[AllGridView] Quiz Answers Available:", !!quizAnswers);
     
     if (!quizAnswers) {
       console.warn("[AllGridView] No quiz answers available");
@@ -77,19 +78,32 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
       return;
     }
 
+    // Log quiz answers to verify they're being used
+    console.log("========== QUIZ ANSWERS BEING USED ==========");
+    console.log("[AllGridView] Quiz Answers:", {
+      annualIncome: quizAnswers.annualIncome,
+      creditScore: quizAnswers.creditScore,
+      isCollegeGrad: quizAnswers.isCollegeGrad,
+      isSelfEmployed: quizAnswers.isSelfEmployed,
+      city: quizAnswers.city,
+      state: quizAnswers.state,
+      milesPerWeek: quizAnswers.milesPerWeek
+    });
+
     // Clear previous prediction and set new car FIRST
     setLoanPrediction(null);
     setSelectedCarForLoan(car);
     setLoanLoading(true);
 
     try {
-      // Verify MSRP is correct before making the call
-      const carMsrp = car.financing?.estimated_current_cost;
+      // Verify MSRP is correct before making the call - use msrp, not estimated_current_cost
+      const carMsrp = car.financing?.msrp;
       if (!carMsrp || carMsrp <= 0) {
         throw new Error(`Invalid MSRP for ${car.make} ${car.model}: ${carMsrp}`);
       }
       
       console.log("[AllGridView] Calling predictLoanApproval with MSRP:", carMsrp);
+      console.log("[AllGridView] Quiz answers being passed:", quizAnswers);
       const prediction = await predictLoanApproval(quizAnswers, car);
       console.log("[AllGridView] Prediction received:", prediction);
       console.log("[AllGridView] Prediction was for MSRP:", carMsrp);

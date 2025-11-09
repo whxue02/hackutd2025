@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
@@ -32,11 +32,32 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
     milesPerWeek: "",
   });
 
+  // Reset quiz state when component mounts (for retaking quiz)
+  useEffect(() => {
+    setStep(1);
+    setAnswers({
+      annualIncome: "",
+      creditScore: "",
+      isCollegeGrad: null,
+      isSelfEmployed: null,
+      city: "",
+      state: "",
+      milesPerWeek: "",
+    });
+  }, []);
+
   const handleNext = () => {
     if (step < 7) {
       setStep(step + 1);
     } else {
-      onComplete(answers);
+      // Normalize city and state to lowercase before completing
+      const normalizedAnswers = {
+        ...answers,
+        city: answers.city.trim().toLowerCase(),
+        state: answers.state.trim().toLowerCase(),
+      };
+      console.log("Quiz completed with answers:", normalizedAnswers);
+      onComplete(normalizedAnswers);
     }
   };
 
