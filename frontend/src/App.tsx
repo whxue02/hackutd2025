@@ -167,6 +167,7 @@ function MainApp() {
             onToggleSelection={(id: string, car?: Car) => handleToggleSelection(id, car)}
             onBack={handleBackToSwipe}
             allCars={[...carData, ...selectedCarsForComparison]}
+            quizAnswers={quizAnswers}
           />
         ) : displayMode === 'swipe' ? (
           <SwipeView

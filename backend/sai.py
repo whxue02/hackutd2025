@@ -86,8 +86,21 @@ def get_gas_price():
         city = None
         state = None
 
+    print("============================================================")
+    print("[GAS PRICE] ====== GAS PRICE REQUEST RECEIVED ======")
+    print(f"[GAS PRICE] City from request: {city}")
+    print(f"[GAS PRICE] State from request: {state}")
+    print(f"[GAS PRICE] Raw query params: {request.args}")
+    print("============================================================")
+
     if city is None or state is None:
+        print(f"[GAS PRICE] ERROR: Missing city or state - city: {city}, state: {state}")
         return {"error": "No city, state pair provided"}, 404
+
+    # Normalize city and state to lowercase for API compatibility
+    city_normalized = city.lower().strip()
+    state_normalized = state.lower().strip()
+    print(f"[GAS PRICE] Normalized city: {city_normalized}, state: {state_normalized}")
 
     # Fetch gas price from third-party API
     headers = {
@@ -95,20 +108,30 @@ def get_gas_price():
         "content-type": "application/json"
     }
 
-    resp = requests.get(f'https://api.collectapi.com/gasPrice/fromCity?city={city}, {state}', headers=headers)
+    api_url = f'https://api.collectapi.com/gasPrice/fromCity?city={city_normalized}, {state_normalized}'
+    print(f"[GAS PRICE] Calling external API: {api_url}")
+    
+    resp = requests.get(api_url, headers=headers)
     if resp.status_code != 200:
+        print(f"[GAS PRICE] ERROR: API returned status {resp.status_code}")
         return {"error": "Failed to fetch gas price"}, 500
 
-    print(resp.json())
+    print(f"[GAS PRICE] API response received: {resp.json()}")
     if resp.json()["result"]["currency"] == "usd":
         if resp.json()["result"]["unit"] == "liter":
             price = float(resp.json()["result"]["gasoline"]) * 3.78541178
+            print(f"[GAS PRICE] Price in liters: {resp.json()['result']['gasoline']}, converted to gallons: {price}")
         else:
             price = float(resp.json()["result"]["gasoline"])
+            print(f"[GAS PRICE] Price in gallons: {price}")
     else:
+        print(f"[GAS PRICE] ERROR: Unsupported currency: {resp.json()['result']['currency']}")
         return {"error": "Unsupported currency"}, 500
 
-    return {"price": round(price, 2)}, 200
+    final_price = round(price, 2)
+    print(f"[GAS PRICE] Final price returned: ${final_price} for {city_normalized}, {state_normalized}")
+    print("============================================================")
+    return {"price": final_price}, 200
 
 
 @app.route('/trade-in-value', methods=['POST'])

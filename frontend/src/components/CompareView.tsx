@@ -1,7 +1,10 @@
+import React, { useState, useEffect } from "react";
 import { Car } from "../types/car";
 import { Gauge, Fuel, DollarSign, Star, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { QuizAnswers } from "./Quiz";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface CompareViewProps {
   likedCars: Car[];
@@ -9,9 +12,10 @@ interface CompareViewProps {
   onToggleSelection: (carId: string, car?: Car) => void;
   onBack: () => void;
   allCars?: Car[];
+  quizAnswers?: QuizAnswers | null;
 }
 
-export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack, allCars = [] }: CompareViewProps) {
+export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack, allCars = [], quizAnswers }: CompareViewProps) {
   // Resolve selected ids against likedCars first, then fallback to allCars so selections
   // made from the All grid (which may not be in likedCars) are still shown.
   const lookup: Record<string, Car> = {};
@@ -90,6 +94,16 @@ export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack
                   <DetailedCarCard key={car.id} car={car} />
                 ))}
               </div>
+              
+              {/* Weekly Commuting Cost Comparison */}
+              {quizAnswers && quizAnswers.city && quizAnswers.state && quizAnswers.milesPerWeek && (
+                <CommutingCostComparison 
+                  cars={carsToCompare}
+                  city={quizAnswers.city}
+                  state={quizAnswers.state}
+                  milesPerWeek={parseFloat(quizAnswers.milesPerWeek) || 0}
+                />
+              )}
             </div>
           )}
 
@@ -301,6 +315,177 @@ function DetailedCarCard({ car }: DetailedCarCardProps) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+interface CommutingCostComparisonProps {
+  cars: Car[];
+  city: string;
+  state: string;
+  milesPerWeek: number;
+}
+
+function CommutingCostComparison({ cars, city, state, milesPerWeek }: CommutingCostComparisonProps) {
+  const [gasPrice, setGasPrice] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchGasPrice = async () => {
+      try {
+        setLoading(true);
+        console.log("========== GAS PRICE REQUEST ==========");
+        console.log("[CommutingCostComparison] City from quiz:", city);
+        console.log("[CommutingCostComparison] State from quiz:", state);
+        console.log("[CommutingCostComparison] Miles per week:", milesPerWeek);
+        
+        // Use sai.py endpoint on localhost:5001
+        const url = `http://localhost:5001/gas-price?city=${encodeURIComponent(city)}&state=${encodeURIComponent(state)}`;
+        console.log("[CommutingCostComparison] Fetching gas price from sai.py:", url);
+        
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error('Failed to fetch gas price');
+        }
+        const data = await response.json();
+        console.log("[CommutingCostComparison] Gas price received from sai.py:", data.price);
+        setGasPrice(data.price);
+        setError(null);
+      } catch (err) {
+        console.error("[CommutingCostComparison] Error fetching gas price from sai.py:", err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch gas price');
+        // Use a default gas price if API fails (national average ~$3.50)
+        setGasPrice(3.50);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (city && state) {
+      fetchGasPrice();
+    } else {
+      console.warn("[CommutingCostComparison] Missing city or state:", { city, state });
+    }
+  }, [city, state, milesPerWeek]);
+
+  // Calculate weekly commuting cost for each car
+  const calculateWeeklyCost = (car: Car, gasPricePerGallon: number): number => {
+    // Average city and highway MPG for combined estimate
+    const mpg = (car.gasMileage.city + car.gasMileage.highway) / 2;
+    if (mpg <= 0) return 0;
+    const gallonsPerWeek = milesPerWeek / mpg;
+    return gallonsPerWeek * gasPricePerGallon;
+  };
+
+  if (loading) {
+    return (
+      <div className="mt-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-6 border border-primary/40">
+        <h4 className="text-white mb-4 italic text-xl" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+          Weekly Commuting Cost Comparison
+        </h4>
+        <p className="text-gray-400 italic">Loading gas price data from sai.py...</p>
+      </div>
+    );
+  }
+
+  if (!gasPrice || cars.length !== 2) {
+    return null;
+  }
+
+  const chartData = cars.map(car => {
+    const weeklyCost = calculateWeeklyCost(car, gasPrice);
+    const mpg = (car.gasMileage.city + car.gasMileage.highway) / 2;
+    return {
+      name: `${car.year} ${car.make} ${car.model}`,
+      weeklyCost: Math.round(weeklyCost * 100) / 100,
+      mpg: Math.round(mpg),
+      savings: 0 // Will calculate below
+    };
+  });
+
+  // Calculate savings (difference between the two cars)
+  const costDifference = Math.abs(chartData[0].weeklyCost - chartData[1].weeklyCost);
+  const cheaperCar = chartData[0].weeklyCost < chartData[1].weeklyCost ? 0 : 1;
+  chartData[cheaperCar].savings = costDifference;
+
+  const totalSavings = costDifference * 52; // Annual savings
+
+  return (
+    <div className="mt-8 bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-6 border border-primary/40">
+      <h4 className="text-white mb-2 italic text-xl" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+        Weekly Commuting Cost Comparison
+      </h4>
+      <p className="text-gray-400 italic text-sm mb-4">
+        Based on {milesPerWeek} miles/week in {city}, {state} • Gas: ${gasPrice.toFixed(2)}/gallon (from sai.py)
+      </p>
+
+      {error && (
+        <p className="text-yellow-400 italic text-sm mb-4">
+          ⚠️ Using estimated gas price. {error}
+        </p>
+      )}
+
+      <div className="bg-gray-900/50 rounded-xl p-4 mb-4">
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+            <XAxis 
+              dataKey="name" 
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              angle={-15}
+              textAnchor="end"
+              height={80}
+            />
+            <YAxis 
+              stroke="#9CA3AF"
+              tick={{ fill: '#9CA3AF', fontSize: 12 }}
+              label={{ value: 'Weekly Cost ($)', angle: -90, position: 'insideLeft', fill: '#9CA3AF' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#1F2937', 
+                border: '1px solid #8B1F3D',
+                borderRadius: '8px',
+                color: '#fff'
+              }}
+              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Weekly Cost']}
+            />
+            <Legend 
+              wrapperStyle={{ color: '#9CA3AF' }}
+            />
+            <Bar 
+              dataKey="weeklyCost" 
+              fill="#8B1F3D"
+              radius={[8, 8, 0, 0]}
+              name="Weekly Cost"
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        {chartData.map((data, index) => (
+          <div key={index} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
+            <p className="text-gray-400 italic text-sm mb-1">{data.name}</p>
+            <p className="text-white italic text-2xl font-bold" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+              ${data.weeklyCost.toFixed(2)}/week
+            </p>
+            <p className="text-gray-500 italic text-xs mt-1">
+              {data.mpg} MPG • ${(data.weeklyCost * 52).toFixed(2)}/year
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {totalSavings > 0 && (
+        <div className="mt-4 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+          <p className="text-primary italic text-center">
+            💰 You could save <span className="font-bold">${totalSavings.toFixed(2)}/year</span> by choosing the more fuel-efficient option!
+          </p>
+        </div>
+      )}
     </div>
   );
 }
