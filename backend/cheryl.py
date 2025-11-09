@@ -1,5 +1,6 @@
 # app.py
 from flask import Flask, request, jsonify
+from flask import send_from_directory
 from rag_model import query_rag
 from flask_cors import CORS
 from google.cloud import firestore
@@ -30,6 +31,10 @@ def escape_slash(s):
 
 app = Flask(__name__)
 CORS(app)
+
+@app.route("/images/<filename>")
+def serve_image(filename):
+    return send_from_directory(IMAGES_DIR, filename)
 
 def download_image(image_url, hack_id):
     """Download image from URL and save it with a unique filename"""
