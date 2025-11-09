@@ -216,7 +216,7 @@ def ask():
         cars.append({
             "hack_id": hack_id,
             "description": result["descriptions"][i],
-            "link": f"/data/cars?hack-id={hack_id}"
+            "link": f"/car/{hack_id}"
         })
     
     return jsonify({
