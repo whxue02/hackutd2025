@@ -1,20 +1,48 @@
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { Car } from "./types/car";
 import { carData } from "./data/cars";
 import { SwipeView } from "./components/SwipeView";
 import { CompareView } from "./components/CompareView";
 import { AllGridView } from "./components/AllGridView";
+import { LandingPage } from "./components/LandingPage";
+import { Quiz, QuizAnswers } from "./components/Quiz";
 import { Button } from "./components/ui/button";
 import { Car as CarIcon } from "lucide-react";
 
 type ViewMode = "swipe" | "compare";
 
 export default function App() {
+  const [showLanding, setShowLanding] = useState(true);
+  const [showQuiz, setShowQuiz] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [likedCars, setLikedCars] = useState<Car[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("swipe");
   const [displayMode, setDisplayMode] = useState<"swipe" | "all">("swipe");
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
+
+  const handleNavigateFromLanding = (mode: "swipe" | "all" | "quiz") => {
+    if (mode === "quiz") {
+      setShowQuiz(true);
+      setShowLanding(false);
+    } else {
+      setDisplayMode(mode);
+      setShowLanding(false);
+    }
+  };
+
+  const handleQuizComplete = (answers: QuizAnswers) => {
+    setQuizAnswers(answers);
+    setShowQuiz(false);
+    setDisplayMode("swipe");
+    // You can use the quiz answers here to filter/recommend cars
+    console.log("Quiz answers:", answers);
+  };
+
+  const handleQuizBack = () => {
+    setShowQuiz(false);
+    setShowLanding(true);
+  };
 
   const filteredCars = useMemo(() => {
     if (selectedCategory === "All") {
@@ -48,6 +76,14 @@ export default function App() {
   const handleBackToSwipe = () => {
     setViewMode("swipe");
   };
+
+  if (showLanding) {
+    return <LandingPage onNavigate={handleNavigateFromLanding} />;
+  }
+
+  if (showQuiz) {
+    return <Quiz onComplete={handleQuizComplete} onBack={handleQuizBack} />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
@@ -110,6 +146,7 @@ export default function App() {
             onLike={handleLike}
             onDislike={handleDislike}
             onFinish={handleFinish}
+            quizAnswers={quizAnswers}
           />
         ) : (
           <AllGridView

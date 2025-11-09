@@ -5,14 +5,17 @@ import { CarCard } from "./CarCard";
 import { Heart, X } from "lucide-react";
 import { Button } from "./ui/button";
 
+import { QuizAnswers } from "./Quiz";
+
 interface SwipeViewProps {
   cars: Car[];
   onLike: (car: Car) => void;
   onDislike: (car: Car) => void;
   onFinish: () => void;
+  quizAnswers?: QuizAnswers | null;
 }
 
-export function SwipeView({ cars, onLike, onDislike, onFinish }: SwipeViewProps) {
+export function SwipeView({ cars, onLike, onDislike, onFinish, quizAnswers }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentCar = cars[currentIndex];
@@ -53,6 +56,7 @@ export function SwipeView({ cars, onLike, onDislike, onFinish }: SwipeViewProps)
             <SwipeCard
               car={currentCar}
               onSwipe={handleSwipe}
+              quizAnswers={quizAnswers}
               key={currentCar.id}
             />
           )}
@@ -71,9 +75,10 @@ export function SwipeView({ cars, onLike, onDislike, onFinish }: SwipeViewProps)
 interface SwipeCardProps {
   car: Car;
   onSwipe: (direction: "left" | "right") => void;
+  quizAnswers?: QuizAnswers | null;
 }
 
-function SwipeCard({ car, onSwipe }: SwipeCardProps) {
+function SwipeCard({ car, onSwipe, quizAnswers }: SwipeCardProps) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
@@ -97,7 +102,7 @@ function SwipeCard({ car, onSwipe }: SwipeCardProps) {
       onDragEnd={handleDragEnd}
       whileTap={{ cursor: "grabbing" }}
     >
-      <CarCard car={car} />
+      <CarCard car={car} quizAnswers={quizAnswers} />
       
       {/* Like indicator - only shows when swiping right */}
       <motion.div

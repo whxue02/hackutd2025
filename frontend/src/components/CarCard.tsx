@@ -1,12 +1,34 @@
+import { useState, useEffect } from "react";
 import { Car } from "../types/car";
-import { Gauge, Fuel, DollarSign, Star } from "lucide-react";
+import { Gauge, Fuel, DollarSign, Star, CheckCircle, XCircle } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { QuizAnswers } from "./Quiz";
+import { predictLoanApproval, LoanPrediction } from "../utils/loanPrediction";
 
 interface CarCardProps {
   car: Car;
+  quizAnswers?: QuizAnswers | null;
 }
 
-export function CarCard({ car }: CarCardProps) {
+export function CarCard({ car, quizAnswers }: CarCardProps) {
+  const [loanPrediction, setLoanPrediction] = useState<LoanPrediction | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (quizAnswers) {
+      setLoading(true);
+      predictLoanApproval(quizAnswers, car)
+        .then((prediction) => {
+          setLoanPrediction(prediction);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Error fetching loan prediction:", error);
+          setLoading(false);
+        });
+    }
+  }, [quizAnswers, car]);
+
   return (
     <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-3xl shadow-2xl overflow-hidden border border-primary/40 shadow-primary/20 flex flex-col">
       {/* Tron-style glow effect */}
@@ -101,6 +123,37 @@ export function CarCard({ car }: CarCardProps) {
             <p className="text-white/70 italic">
               {car.financing.apr}% APR
             </p>
+            
+            {/* Loan Approval Status */}
+            {quizAnswers && (
+              <div className="mt-4 pt-4 border-t border-white/20">
+                {loading ? (
+                  <p className="text-white/70 italic text-sm">Checking approval...</p>
+                ) : loanPrediction ? (
+                  <div className={`flex items-center gap-2 p-3 rounded-lg ${
+                    loanPrediction.approved 
+                      ? "bg-green-500/20 border border-green-500/50" 
+                      : "bg-red-500/20 border border-red-500/50"
+                  }`}>
+                    {loanPrediction.approved ? (
+                      <CheckCircle className="w-5 h-5 text-green-400" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-red-400" />
+                    )}
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold italic ${
+                        loanPrediction.approved ? "text-green-300" : "text-red-300"
+                      }`}>
+                        {loanPrediction.approved ? "Loan Approved" : "Loan Not Approved"}
+                      </p>
+                      <p className="text-white/70 italic text-xs mt-1">
+                        {Math.round(loanPrediction.probability * 100)}% probability • {loanPrediction.reason}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4 pt-4 border-t border-primary/20">

@@ -441,6 +441,40 @@ def add_car():
     })
     return {"message": "Car added"}, 200
 
+@app.route('/predict/loan', methods=['POST'])
+def predict_loan():
+    try:
+        data = request.get_json()
+    except:
+        return {"error": "No data provided"}, 400
+    
+    try:
+        # Extract quiz answers and car price
+        income_annum = float(data.get("annualIncome", 0"))
+        credit_score = int(data.get("creditScore", 0))
+        is_college_grad = 1 if data.get("isCollegeGrad") else 0
+        is_self_employed = 1 if data.get("isSelfEmployed") else 0
+        loan_amount = float(data.get("loanAmount", 0))  # Car MSRP
+        loan_term = int(data.get("loanTerm", 5))  # Default 5 years
+        
+        # Import prediction function
+        from predict_loan import predict_loan_approval
+        
+        # Make prediction
+        result = predict_loan_approval(
+            income_annum=income_annum,
+            loan_amount=loan_amount,
+            loan_term=loan_term,
+            cibil_score=credit_score,
+            education=is_college_grad,
+            self_employed=is_self_employed
+        )
+        
+        return result, 200
+    except Exception as e:
+        print(f"Error in loan prediction: {e}")
+        return {"error": str(e)}, 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
 
