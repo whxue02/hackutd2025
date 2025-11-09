@@ -86,7 +86,7 @@ function MainApp() {
     // If quiz is missing location, enable inline inputs and require them
     if (!city || !stateAc) {
       setNeedLocationInputs(true);
-      setTradeError("Please complete the quiz or provide location.");
+      setTradeError("");
       // If user already provided inline inputs, use them
       if (tradeCityInput.trim()) city = tradeCityInput.trim();
       if (tradeStateInput.trim()) stateAc = tradeStateInput.trim();
@@ -229,6 +229,37 @@ function MainApp() {
 
   const handleBackToSwipe = () => {
     setViewMode("swipe");
+  };
+
+  // Helper: format trade result as USD if numeric, otherwise return null + raw string
+  const formatTradeValue = (val: any): { isCurrency: boolean; formatted: string } => {
+    if (val == null) return { isCurrency: false, formatted: "" };
+    // If it's already a number
+    if (typeof val === "number" && Number.isFinite(val)) {
+      return { isCurrency: true, formatted: val.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) };
+    }
+    // If it's a string that contains a number (e.g., "12345" or "$12,345" or "12345.67")
+    if (typeof val === "string") {
+      // find first numeric-like substring
+      const match = val.match(/-?\d[\d,\.]*/);
+      if (match) {
+        const num = Number(match[0].replace(/,/g, ""));
+        if (!Number.isNaN(num) && Number.isFinite(num)) {
+          return { isCurrency: true, formatted: num.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }) };
+        }
+      }
+    }
+    // If it's an object that may contain a numeric field we already tried extracting earlier; fallback to stringified
+    if (typeof val === "object") {
+      try {
+        const s = JSON.stringify(val);
+        return { isCurrency: false, formatted: s };
+      } catch {
+        return { isCurrency: false, formatted: String(val) };
+      }
+    }
+    // last resort
+    return { isCurrency: false, formatted: String(val) };
   };
 
   if (showLanding) {
@@ -400,8 +431,8 @@ function MainApp() {
                 <span className="text-xl font-semibold">✕</span>
               </button>
 
-              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Get Trade-in Value</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">Enter your car details to estimate trade-in value.</p>
+              <h3 className="text-lg font-semibold mb-3 text-white-900 dark:text-white-100">Get Trade-in Value</h3>
+              <p className="text-sm text-white-600 dark:text-white-300 mb-4">Enter your car details to estimate trade-in value.</p>
 
               <div className="space-y-3">
                 <input
@@ -446,12 +477,26 @@ function MainApp() {
               {/* feedback area */}
               <div className="mt-4">
                 {tradeError && <div className="text-sm text-red-600 mb-2">{tradeError}</div>}
-                {tradeResult != null && (
-                  <div className="text-sm text-green-700 bg-green-50 p-3 rounded-md mb-2">
-                    <strong>Result:</strong>
-                    <div className="whitespace-pre-wrap">{String(tradeResult)}</div>
-                  </div>
-                )}
+                {tradeResult != null && (() => {
+                  const formatted = formatTradeValue(tradeResult);
+                  if (formatted.isCurrency) {
+                    return (
+                      <div className="bg-green-50 p-4 rounded-md mb-2 text-left">
+                        <div className="text-sm text-white-700">Estimated Trade‑In Value</div>
+                        <div className="mt-2 text-4xl md:text-10xl font-extrabold text-white-800">
+                          {formatted.formatted}
+                        </div>
+                      </div>
+                    );
+                  }
+                  // fallback for non-numeric results
+                  return (
+                    <div className="text-sm text-green-700 bg-green-50 p-5 rounded-md mb-2 text-left">
+                      <strong>Result:</strong>
+                      <div className="whitespace-pre-wrap">{formatted.formatted}</div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="mt-4 flex items-center gap-3">
@@ -464,7 +509,7 @@ function MainApp() {
                 </button>
                 <button
                   onClick={() => setShowTradeModal(false)}
-                  className="px-4 py-2 rounded-lg border border-gray-200 bg-transparent text-gray-700"
+                  className="px-4 py-2 rounded-lg border border-white-200 bg-transparent text-white-700"
                 >
                   Close
                 </button>
