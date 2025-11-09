@@ -39,6 +39,11 @@ function MainApp() {
   const [tradeResult, setTradeResult] = useState<any>(null);
   const [tradeError, setTradeError] = useState<string | null>(null);
 
+  // ===== New: optional location inputs shown when quiz/location missing =====
+  const [needLocationInputs, setNeedLocationInputs] = useState(false);
+  const [tradeCityInput, setTradeCityInput] = useState("");
+  const [tradeStateInput, setTradeStateInput] = useState("");
+
   // ===== Updated: handlers for the two floating buttons (modal implementation) =====
   const handleOpenChatbot = () => {
     console.log("Chatbot button clicked");
@@ -55,6 +60,10 @@ function MainApp() {
     setTradeModel("");
     setTradeResult(null);
     setTradeError(null);
+    // reset location inputs/flag
+    setTradeCityInput("");
+    setTradeStateInput("");
+    setNeedLocationInputs(false);
     setShowTradeModal(true);
   };
 
@@ -68,27 +77,30 @@ function MainApp() {
       return;
     }
 
-    // Use quizAnswers for city/state if available
+    // Use quizAnswers for city/state if available; otherwise fall back to modal inputs when enabled
     const qa: any = quizAnswers;
     let city = qa?.city || qa?.cityName || qa?.location?.city;
     let stateAc = qa?.['state-ac'] || qa?.state || qa?.stateAc || qa?.stateAbbr;
 
-    if (!city) {
-      setTradeError("No city available from quiz. Please complete the quiz or provide location.");
-      // You may want to prompt user to take quiz or add location inputs; for now require quiz data
-      return;
-    }
-    if (!stateAc) {
-      setTradeError("No state available from quiz. Please complete the quiz or provide location.");
-      return;
+    // If quiz is missing location, enable inline inputs and require them
+    if (!city || !stateAc) {
+      setNeedLocationInputs(true);
+      setTradeError("Please complete the quiz or provide location.");
+      // If user already provided inline inputs, use them
+      if (tradeCityInput.trim()) city = tradeCityInput.trim();
+      if (tradeStateInput.trim()) stateAc = tradeStateInput.trim();
+      // If still missing after checking inputs, stop here and show inputs to user
+      if (!city || !stateAc) {
+        return;
+      }
     }
 
     const payload = {
       year: tradeYear.trim(),
       make: tradeMake.trim(),
       model: tradeModel.trim(),
-      city: city.toLowerCase(),
-      ['state-ac']: stateAc.toLowerCase(),
+      city: String(city).toLowerCase(),
+      ['state-ac']: String(stateAc).toLowerCase(),
     };
 
     setTradeLoading(true);
@@ -138,6 +150,8 @@ function MainApp() {
       const resultValue = extractResult(data);
       setTradeResult(resultValue);
       setTradeLoading(false);
+      // close location inputs after success
+      setNeedLocationInputs(false);
     } catch (err) {
       console.error("Trade-in request failed:", err);
       setTradeError("Failed to contact trade-in service.");
@@ -404,6 +418,25 @@ function MainApp() {
                   placeholder="Model (e.g., Corolla)"
                   className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+
+                {/* New: city/state inline inputs when quiz/location is missing */}
+                {needLocationInputs && (
+                  <>
+                    <input
+                      value={tradeCityInput}
+                      onChange={(e) => setTradeCityInput(e.target.value)}
+                      placeholder="City (e.g., Austin)"
+                      className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <input
+                      value={tradeStateInput}
+                      onChange={(e) => setTradeStateInput(e.target.value)}
+                      placeholder="State (abbrev., e.g., TX)"
+                      className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-gray-500">Quiz location was not available — please provide city and state.</p>
+                  </>
+                )}
               </div>
 
               {/* feedback area */}
