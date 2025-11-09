@@ -456,88 +456,116 @@ function MainApp() {
       {/* ===== New: Trade-in Modal + overlay ===== */}
       {showTradeModal && (
         <>
-          {/* overlay that blurs background */}
+          {/* overlay styled like Loan Approval Modal (dark + blur) */}
           <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 40,
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(4px)'
+            }}
             onClick={() => setShowTradeModal(false)}
             aria-hidden
           />
 
-          {/* centered modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            {/* Constrain modal width so it doesn't span full viewport.
-                - mx-4 gives a small side margin on very small screens.
-                - max-w-[640px] keeps modal reasonably narrow on large screens.
-                - w-full removed so it won't stretch; instead use min-w-0 to allow proper shrinking.
-            */}
+          {/* centered modal (Loan Approval Modal styling) */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
             <div
-              className="mx-4 min-w-0 max-w-[640px] bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-700 rounded-2xl shadow-2xl p-6 relative"
               role="dialog"
               aria-modal="true"
-
+              style={{
+                background: '#fdfdfd',
+                borderRadius: 24,
+                padding: 32,
+                maxWidth: 640,
+                width: '90%',
+                margin: 16,
+                boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+                position: 'relative'
+              }}
             >
                {/* close X */}
                <button
                  onClick={() => setShowTradeModal(false)}
                  aria-label="Close trade modal"
-                 className="absolute right-3 top-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white "
+                 style={{
+                   background: 'none',
+                   border: 'none',
+                   color: '#666',
+                   fontSize: 32,
+                   cursor: 'pointer',
+                   lineHeight: 1,
+                   position: 'absolute',
+                   right: 12,
+                   top: 12
+                 }}
                >
-                 <span className="text-xl font-semibold">✕</span>
+                 ×
                </button>
 
-               <h3 className="text-lg font-semibold mb-3 text-white-900 dark:text-white-100">Get Trade-in Value</h3>
-               <p className="text-sm text-white-600 dark:text-white-300 mb-4">Enter your car details to estimate trade-in value.</p>
+               <h3 style={{ color: '#1a1a1a', fontSize: 24, fontWeight: 600, margin: '0 0 8px 0' }}>
+                 Get Trade-in Value
+               </h3>
+               <p style={{ color: '#666', fontSize: 14, margin: '0 0 16px 0' }}>
+                 Enter your car details to estimate trade-in value.
+               </p>
 
-               <div className="space-y-4">
-                 <input
+                <div className="space-y-4">
+                  <input
                    value={tradeYear}
                    onChange={(e) => setTradeYear(e.target.value)}
                    placeholder="Year (e.g., 2023)"
                    className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                 />
-                 <input
+                   style={{ background: '#fff', color: '#1a1a1a' }}
+                  />
+                  <input
                    value={tradeMake}
                    onChange={(e) => setTradeMake(e.target.value)}
                    placeholder="Make (e.g., Toyota)"
                    className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                 />
-                 <input
+                   style={{ background: '#fff', color: '#1a1a1a' }}
+                  />
+                  <input
                    value={tradeModel}
                    onChange={(e) => setTradeModel(e.target.value)}
                    placeholder="Model (e.g., Corolla)"
                    className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                 />
+                   style={{ background: '#fff', color: '#1a1a1a', marginBottom: '12px'}}
+                  />
 
-                 {/* New: city/state inline inputs when quiz/location is missing */}
-                 {needLocationInputs && (
-                   <>
-                     <input
+                  {/* New: city/state inline inputs when quiz/location is missing */}
+                   {needLocationInputs && (
+                     <>
+                       <input
                        value={tradeCityInput}
                        onChange={(e) => setTradeCityInput(e.target.value)}
                        placeholder="City (e.g., Austin)"
                        className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                     />
-                     <input
+                       style={{ background: '#fff', color: '#1a1a1a' }}
+                       />
+                       <input
                        value={tradeStateInput}
                        onChange={(e) => setTradeStateInput(e.target.value)}
                        placeholder="State (abbrev., e.g., TX)"
                        className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                     />
-                     <p className="text-xs text-gray-500">Quiz location was not available — please provide city and state.</p>
-                   </>
-                 )}
-               </div>
+                       style={{ background: '#fff', color: '#1a1a1a' }}
+                       />
+                       <p className="text-xs text-gray-500">Quiz location was not available — please provide city and state.</p>
+                     </>
+                   )}
+                 </div>
 
-               {/* feedback area */}
-               <div className="mt-4">
-                 {tradeError && <div className="text-sm text-red-600 mb-2">{tradeError}</div>}
+                 {/* feedback area */}
+                 <div className="mt-4">
+                 {tradeError && <div style={{ color: '#ef4444', fontSize: 13, marginBottom: 8 }}>{tradeError}</div>}
                  {tradeResult != null && (() => {
                    const formatted = formatTradeValue(tradeResult);
                    if (formatted.isCurrency) {
                      return (
-                       <div className="bg-green-50 p-4 rounded-md mb-2 text-left">
-                         <div className="text-sm text-white-700">Estimated Trade‑In Value</div>
-                         <div className="mt-2 text-4xl md:text-10xl font-extrabold text-white-800">
+                       <div style={{ padding: 16, borderRadius: 12, marginBottom: 12, background: 'rgba(34,197,94,0.05)' }}>
+                         <div style={{ color: '#666', fontSize: 13, marginTop: 12}}>Estimated Trade‑In Value</div>
+                         <div style={{ marginTop: 8, fontSize: 28, fontWeight: 800, color: '#1a1a1a' }}>
                            {formatted.formatted}
                          </div>
                        </div>
@@ -545,32 +573,51 @@ function MainApp() {
                    }
                    // fallback for non-numeric results
                    return (
-                     <div className="text-sm text-green-700 bg-green-50 p-5 rounded-md mb-2 text-left">
+                     <div style={{ fontSize: 13, color: '#155724', background: '#ecfdf5', padding: 12, borderRadius: 8, marginBottom: 8 }}>
                        <strong>Result:</strong>
-                       <div className="whitespace-pre-wrap">{formatted.formatted}</div>
+                       <div style={{ whiteSpace: 'pre-wrap', color: '#1a1a1a' }}>{formatted.formatted}</div>
                      </div>
                    );
                  })()}
-               </div>
+                 </div>
 
-               {/* add extra top margin so buttons sit further below inputs/feedback */}
-               <div className="mt-6 flex items-center gap-3">
+                 {/* add extra top margin so buttons sit further below inputs/feedback */}
+                 <div className="mt-6 flex items-center gap-3">
                  <button
                    onClick={handleSubmitTrade}
                    disabled={tradeLoading}
-                   className="flex-1 inline-flex justify-center items-center bg-primary text-white px-4 py-2 rounded-lg hover:opacity-95 disabled:opacity-50"
-                   style={{ cursor: "pointer"}}
+                   style={{
+                     flex: 1,
+                     display: 'inline-flex',
+                     justifyContent: 'center',
+                     alignItems: 'center',
+                     background: '#e3000d',
+                     color: '#fff',
+                     padding: '10px 14px',
+                     borderRadius: 12,
+                     border: 'none',
+                     fontWeight: 600,
+                     cursor: 'pointer',
+                     marginTop: '12px',
+                   }}
                  >
                    {tradeLoading ? "Getting value..." : "Get Value"}
                  </button>
                  <button
                    onClick={() => setShowTradeModal(false)}
-                   className="px-4 py-2 rounded-lg border border-white-200 bg-transparent text-white-700"
-                   style={{ backgroundColor: "#ffffff", color: "#404040", borderColor: "#cccccc", cursor: "pointer"}}
+                   style={{
+                     padding: '10px 14px',
+                     borderRadius: 12,
+                     border: 'none',
+                     background: '#e8e8e8',
+                     color: '#1a1a1a',
+                     cursor: 'pointer',
+                     marginTop: '12px',
+                   }}
                  >
                    Close
                  </button>
-               </div>
+                 </div>
              </div>
            </div>
          </>
