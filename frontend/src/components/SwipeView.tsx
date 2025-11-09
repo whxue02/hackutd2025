@@ -41,7 +41,7 @@ export function SwipeView({ cars, onLike, onDislike, onFinish, quizAnswers }: Sw
         justifyContent: 'center',
         height: '100%',
         gap: '32px',
-        background: '#fdfdfd',
+        background: '#fdfdfd00',
         fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial'
       }}>
         <div style={{ textAlign: 'center' }}>
@@ -85,7 +85,7 @@ export function SwipeView({ cars, onLike, onDislike, onFinish, quizAnswers }: Sw
       display: 'flex',
       flexDirection: 'column',
       padding: '20px 0',
-      background: '#fdfdfd',
+      background: '#fdfdfd00',
       fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial'
     }}>
       <div style={{

@@ -319,7 +319,7 @@ function MainApp() {
 />
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       {/* Animated background grid effect */}
-      <header className="relative bg-gradient-to-br from-white-900/95 via-white-800/95 to-white/95 backdrop-blur-sm shadow-lg shadow-primary/10 border-b border-primary/30 sticky top-0 z-50">
+      <header className="relative bg-gradient-to-br from-white-900/95 via-white-800/95 to-white/95 backdrop-blur-sm shadow-lg shadow-primary/10 border-b border-primary/30 sticky top-0 z-50" style={{backgroundColor: "#ffffffcc"}}>
   <div className="max-w-7xl mx-auto px-6 py-4">
     <div className="flex items-center justify-between mb-4">
       <div className="flex items-center gap-4">
