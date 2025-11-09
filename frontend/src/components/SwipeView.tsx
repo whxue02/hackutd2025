@@ -3,8 +3,6 @@ import { motion, useMotionValue, useTransform, PanInfo } from "motion/react";
 import { Car } from "../types/car";
 import { CarCard } from "./CarCard";
 import { Heart, X } from "lucide-react";
-import { Button } from "./ui/button";
-
 import { QuizAnswers } from "./Quiz";
 
 interface SwipeViewProps {
@@ -36,22 +34,79 @@ export function SwipeView({ cars, onLike, onDislike, onFinish, quizAnswers }: Sw
 
   if (!currentCar) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-8">
-        <div className="text-center">
-          <h2 className="text-white mb-3 italic" style={{ fontFamily: 'Orbitron, sans-serif' }}>No more cars to show!</h2>
-          <p className="text-gray-400 italic">Check out your liked cars below</p>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100%',
+        gap: '32px',
+        background: '#fdfdfd',
+        fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <h2 style={{ 
+            margin: '0 0 12px 0', 
+            fontSize: '32px', 
+            fontWeight: '800', 
+            color: '#1a1a1a' 
+          }}>
+            No more cars to show!
+          </h2>
+          <p style={{ margin: 0, color: '#666', fontSize: '16px' }}>
+            Check out your liked cars below
+          </p>
         </div>
-        <Button onClick={onFinish} size="lg" className="px-8 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/30 border border-primary/50 italic">
+        <button 
+          onClick={onFinish}
+          style={{
+            background: '#fdfdfd',
+            border: '1px solid rgba(0,0,0,0.06)',
+            padding: '14px 32px',
+            borderRadius: '24px',
+            color: '#1a1a1a',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: '600',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.1)',
+            transition: 'all 0.2s ease'
+          }}
+        >
           View Liked Cars
-        </Button>
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="relative h-full flex flex-col py-4">
-      <div className="flex-1 relative max-w-xl mx-auto w-full px-4 flex items-center justify-center min-h-0">
-        <div className="relative w-full h-full max-h-[700px]" style={{ aspectRatio: '3/4' }}>
+    <div style={{
+      position: 'relative',
+      height: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      padding: '20px 0',
+      background: '#fdfdfd',
+      fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial'
+    }}>
+      <div style={{
+        flex: 1,
+        position: 'relative',
+        maxWidth: '600px',
+        margin: '0 auto',
+        width: '100%',
+        padding: '0 20px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 0
+      }}>
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          maxHeight: '700px',
+          aspectRatio: '3/4'
+        }}>
           {currentIndex < cars.length && (
             <SwipeCard
               car={currentCar}
@@ -63,8 +118,17 @@ export function SwipeView({ cars, onLike, onDislike, onFinish, quizAnswers }: Sw
         </div>
       </div>
 
-      <div className="text-center py-4 flex-shrink-0">
-        <p className="text-gray-400 italic" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+      <div style={{
+        textAlign: 'center',
+        padding: '16px 0',
+        flexShrink: 0
+      }}>
+        <p style={{
+          margin: 0,
+          color: '#666',
+          fontSize: '14px',
+          fontWeight: '500'
+        }}>
           {currentIndex + 1} of {cars.length}
         </p>
       </div>
@@ -83,7 +147,6 @@ function SwipeCard({ car, onSwipe, quizAnswers }: SwipeCardProps) {
   const rotate = useTransform(x, [-200, 200], [-25, 25]);
   const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
   
-  // Opacity for like/dislike indicators - only show when swiping in that direction
   const likeOpacity = useTransform(x, [-50, 0, 50, 150], [0, 0, 0.5, 1]);
   const dislikeOpacity = useTransform(x, [-150, -50, 0, 50], [1, 0.5, 0, 0]);
 
@@ -94,9 +157,15 @@ function SwipeCard({ car, onSwipe, quizAnswers }: SwipeCardProps) {
   };
 
   return (
+    <>
     <motion.div
-      className="absolute inset-0"
-      style={{ x, rotate, opacity }}
+      style={{ 
+        position: 'absolute',
+        inset: 0,
+        x, 
+        rotate, 
+        opacity 
+      }}
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
@@ -104,25 +173,57 @@ function SwipeCard({ car, onSwipe, quizAnswers }: SwipeCardProps) {
     >
       <CarCard car={car} quizAnswers={quizAnswers} />
       
-      {/* Like indicator - only shows when swiping right */}
       <motion.div
-        className="absolute top-12 right-12 pointer-events-none"
-        style={{ opacity: likeOpacity }}
+        style={{ 
+          position: 'absolute',
+          top: '48px',
+          right: '48px',
+          pointerEvents: 'none',
+          opacity: likeOpacity 
+        }}
       >
-        <div className="bg-primary border-4 border-white rounded-2xl px-8 py-4 rotate-12 shadow-2xl">
-          <Heart className="w-16 h-16 text-white fill-white" />
+        <div style={{
+          background: '#8b1538',
+          border: '3px solid white',
+          borderRadius: '20px',
+          padding: '16px 24px',
+          transform: 'rotate(12deg)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+        }}>
+          <Heart style={{ 
+            width: '48px', 
+            height: '48px', 
+            color: 'white',
+            fill: 'white'
+          }} />
         </div>
       </motion.div>
       
-      {/* Dislike indicator - only shows when swiping left */}
       <motion.div
-        className="absolute top-12 left-12 pointer-events-none"
-        style={{ opacity: dislikeOpacity }}
+        style={{ 
+          position: 'absolute',
+          top: '48px',
+          left: '48px',
+          pointerEvents: 'none',
+          opacity: dislikeOpacity 
+        }}
       >
-        <div className="bg-gray-700 border-4 border-white rounded-2xl px-8 py-4 -rotate-12 shadow-2xl">
-          <X className="w-16 h-16 text-white" />
+        <div style={{
+          background: '#6b7280',
+          border: '3px solid white',
+          borderRadius: '20px',
+          padding: '16px 24px',
+          transform: 'rotate(-12deg)',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
+        }}>
+          <X style={{ 
+            width: '48px', 
+            height: '48px', 
+            color: 'white'
+          }} />
         </div>
       </motion.div>
     </motion.div>
+    </>
   );
 }
