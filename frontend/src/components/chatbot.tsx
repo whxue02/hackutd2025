@@ -100,51 +100,123 @@ export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
 
   return (
     <div
-      className="fixed right-6 z-[9999] bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-700 rounded-2xl shadow-2xl shadow-primary/20 flex flex-col"
       style={{
-        width: "400px",
-        height: "600px",
-        bottom: "90px",
-        maxHeight: "calc(100vh - 110px)",
+        position: 'fixed',
+        right: '24px',
+        bottom: '90px',
+        zIndex: 9999,
+        width: '400px',
+        height: '600px',
+        maxHeight: 'calc(100vh - 110px)',
+        background: '#fdfdfd',
+        border: '1px solid rgba(0,0,0,0.06)',
+        borderRadius: '24px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
+        display: 'flex',
+        flexDirection: 'column',
+        fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial'
       }}
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gradient-to-r from-primary/20 to-primary/10 rounded-t-2xl">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '20px',
+        borderBottom: '1px solid rgba(0,0,0,0.06)',
+        background: 'rgba(139,21,56,0.05)',
+        borderRadius: '24px 24px 0 0'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: '#8b1538',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 8px rgba(139,21,56,0.3)'
+          }}>
+            <MessageCircle style={{ width: '20px', height: '20px', color: 'white' }} />
           </div>
           <div>
-            <h3 className="text-white font-semibold italic" style={{ fontFamily: 'Saira, sans-serif' }}>
+            <h3 style={{
+              margin: 0,
+              fontSize: '16px',
+              fontWeight: '700',
+              color: '#1a1a1a'
+            }}>
               Car Assistant
             </h3>
-            <p className="text-xs text-gray-400 italic">Online now</p>
+            <p style={{
+              margin: 0,
+              fontSize: '12px',
+              color: '#666'
+            }}>
+              Online now
+            </p>
           </div>
         </div>
         <button
           onClick={() => setIsOpen(false)}
-          className="text-gray-400 hover:text-white transition-colors"
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#666',
+            cursor: 'pointer',
+            padding: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.2s'
+          }}
         >
-          <X className="w-5 h-5" />
+          <X style={{ width: '20px', height: '20px' }} />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
         {messages.map((message) => (
           <div
-          key={message.id}
-          className={`flex w-full ${
-            message.sender === "user" ? "justify-end text-right" : "justify-start text-left"
-          }`}
-        >
+            key={message.id}
+            style={{
+              display: 'flex',
+              width: '100%',
+              justifyContent: message.sender === "user" ? 'flex-end' : 'flex-start',
+              textAlign: message.sender === "user" ? 'right' : 'left'
+            }}
+          >
             <div
-              className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                message.sender === "user"
-                  ? "bg-gradient-to-r from-primary to-primary/80 text-white"
-                  : "bg-gray-800 text-gray-200 border border-gray-700"
-              }`}
+              style={{
+                maxWidth: '75%',
+                borderRadius: '16px',
+                padding: '12px 16px',
+                background: message.sender === "user"
+                  ? '#8b1538'
+                  : 'rgba(0,0,0,0.04)',
+                color: message.sender === "user" ? 'white' : '#1a1a1a',
+                border: message.sender === "user" 
+                  ? 'none' 
+                  : '1px solid rgba(0,0,0,0.06)',
+                boxShadow: message.sender === "user"
+                  ? '0 2px 8px rgba(139,21,56,0.3)'
+                  : '0 1px 3px rgba(0,0,0,0.1)'
+              }}
             >
-              <div className="text-sm italic whitespace-pre-line">
+              <div style={{
+                fontSize: '14px',
+                whiteSpace: 'pre-line',
+                lineHeight: '1.5'
+              }}>
                 {message.text.split(/(\[.*?\]\(.*?\))/).map((part, idx) => {
                   const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
                   if (linkMatch) {
@@ -154,7 +226,14 @@ export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
                         href={`${linkMatch[2]})`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 underline font-semibold inline-flex items-center gap-1 transition-colors"
+                        style={{
+                          color: message.sender === "user" ? 'white' : '#8b1538',
+                          textDecoration: 'underline',
+                          fontWeight: '600',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
                       >
                         {linkMatch[1]}
                       </a>
@@ -163,7 +242,12 @@ export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
                   return <span key={idx}>{part}</span>;
                 })}
               </div>
-              <span className="text-xs opacity-70 mt-1 block">
+              <span style={{
+                fontSize: '11px',
+                opacity: 0.7,
+                marginTop: '4px',
+                display: 'block'
+              }}>
                 {message.timestamp.toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",
@@ -175,20 +259,42 @@ export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
 
         {/* Typing Indicator */}
         {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3">
-              <div className="flex gap-1">
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{
+              background: 'rgba(0,0,0,0.04)',
+              border: '1px solid rgba(0,0,0,0.06)',
+              borderRadius: '16px',
+              padding: '12px 16px'
+            }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 <div
-                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "0ms" }}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#999',
+                    borderRadius: '50%',
+                    animation: 'bounce 1.4s infinite ease-in-out both'
+                  }}
                 ></div>
                 <div
-                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "150ms" }}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#999',
+                    borderRadius: '50%',
+                    animation: 'bounce 1.4s infinite ease-in-out both',
+                    animationDelay: '0.16s'
+                  }}
                 ></div>
                 <div
-                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                  style={{ animationDelay: "300ms" }}
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    background: '#999',
+                    borderRadius: '50%',
+                    animation: 'bounce 1.4s infinite ease-in-out both',
+                    animationDelay: '0.32s'
+                  }}
                 ></div>
               </div>
             </div>
@@ -199,24 +305,70 @@ export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm">
-        <div className="flex gap-2">
+      <div style={{
+        padding: '20px',
+        borderTop: '1px solid rgba(0,0,0,0.06)',
+        background: '#fdfdfd'
+      }}>
+        <div style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white text-sm italic placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            style={{
+              flex: 1,
+              background: 'rgba(0,0,0,0.02)',
+              border: '1px solid rgba(0,0,0,0.1)',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              color: '#1a1a1a',
+              fontSize: '14px',
+              outline: 'none',
+              fontFamily: 'inherit'
+            }}
           />
           <button
             onClick={handleSendMessage}
-            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white rounded-xl px-4 py-2 transition-all shadow-lg shadow-primary/30"
+            style={{
+              background: '#8b1538',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '12px 16px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(139,21,56,0.3)',
+              transition: 'transform 0.2s, box-shadow 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(139,21,56,0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(139,21,56,0.3)';
+            }}
           >
-            <Send className="w-4 h-4" />
+            <Send style={{ width: '16px', height: '16px', color: 'white' }} />
           </button>
         </div>
       </div>
+
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% {
+            transform: scale(0);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+      `}</style>
     </div>
   );
 }
