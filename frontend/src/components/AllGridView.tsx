@@ -9,7 +9,7 @@ import { CheckCircle, XCircle, DollarSign, Loader2 } from "lucide-react";
 
 interface AllGridViewProps {
   selectedIds?: string[];
-  onToggleSelect?: (id: string) => void;
+  onToggleSelect?: (id: string, car?: Car) => void;
   onCompare?: () => void;
   quizAnswers?: QuizAnswers | null;
 }
@@ -242,7 +242,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
 
               {/* select button */}
               <button
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect && onToggleSelect(car.id); }}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect && onToggleSelect(car.id, car); }}
                 className={`absolute top-3 left-3 w-9 h-9 rounded-full flex items-center justify-center ${selected ? 'bg-primary text-black' : 'bg-white/6 text-white'} shadow-md`}
                 title={selected ? 'Deselect' : 'Select for compare'}
               >
