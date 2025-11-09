@@ -381,6 +381,7 @@ function MainApp() {
             aria-label="Open trade-in"
             title="Trade-in"
             className="w-14 h-14 rounded-xl flex items-center justify-center bg-transparent hover:bg-white/6 transition text-white"
+            style={{ cursor: "pointer"}}
           >
             {/* trade-in icon: two arrows in a circle */}
             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
@@ -402,6 +403,7 @@ function MainApp() {
             aria-label="Open chatbot"
             title="Chat"
             className="w-14 h-14 rounded-xl flex items-center justify-center bg-transparent hover:bg-white/6 transition text-white"
+            style={{ cursor: "pointer"}}
           >
             {/* chat bubble icon */}
             <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
@@ -426,107 +428,116 @@ function MainApp() {
 
           {/* centered modal */}
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            {/* Constrain modal width so it doesn't span full viewport.
+                - mx-4 gives a small side margin on very small screens.
+                - max-w-[640px] keeps modal reasonably narrow on large screens.
+                - w-full removed so it won't stretch; instead use min-w-0 to allow proper shrinking.
+            */}
             <div
-              className="w-full max-w-md bg-white/95 dark:bg-gray-900/95 rounded-2xl shadow-2xl p-6 relative"
+              className="mx-4 min-w-0 max-w-[640px] bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-700 rounded-2xl shadow-2xl p-6 relative"
               role="dialog"
               aria-modal="true"
+
             >
-              {/* close X */}
-              <button
-                onClick={() => setShowTradeModal(false)}
-                aria-label="Close trade modal"
-                className="absolute right-3 top-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
-              >
-                <span className="text-xl font-semibold">✕</span>
-              </button>
+               {/* close X */}
+               <button
+                 onClick={() => setShowTradeModal(false)}
+                 aria-label="Close trade modal"
+                 className="absolute right-3 top-3 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white "
+               >
+                 <span className="text-xl font-semibold">✕</span>
+               </button>
 
-              <h3 className="text-lg font-semibold mb-3 text-white-900 dark:text-white-100">Get Trade-in Value</h3>
-              <p className="text-sm text-white-600 dark:text-white-300 mb-4">Enter your car details to estimate trade-in value.</p>
+               <h3 className="text-lg font-semibold mb-3 text-white-900 dark:text-white-100">Get Trade-in Value</h3>
+               <p className="text-sm text-white-600 dark:text-white-300 mb-4">Enter your car details to estimate trade-in value.</p>
 
-              <div className="space-y-3">
-                <input
-                  value={tradeYear}
-                  onChange={(e) => setTradeYear(e.target.value)}
-                  placeholder="Year (e.g., 2023)"
-                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <input
-                  value={tradeMake}
-                  onChange={(e) => setTradeMake(e.target.value)}
-                  placeholder="Make (e.g., Toyota)"
-                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                <input
-                  value={tradeModel}
-                  onChange={(e) => setTradeModel(e.target.value)}
-                  placeholder="Model (e.g., Corolla)"
-                  className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+               <div className="space-y-4">
+                 <input
+                   value={tradeYear}
+                   onChange={(e) => setTradeYear(e.target.value)}
+                   placeholder="Year (e.g., 2023)"
+                   className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                 />
+                 <input
+                   value={tradeMake}
+                   onChange={(e) => setTradeMake(e.target.value)}
+                   placeholder="Make (e.g., Toyota)"
+                   className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                 />
+                 <input
+                   value={tradeModel}
+                   onChange={(e) => setTradeModel(e.target.value)}
+                   placeholder="Model (e.g., Corolla)"
+                   className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                 />
 
-                {/* New: city/state inline inputs when quiz/location is missing */}
-                {needLocationInputs && (
-                  <>
-                    <input
-                      value={tradeCityInput}
-                      onChange={(e) => setTradeCityInput(e.target.value)}
-                      placeholder="City (e.g., Austin)"
-                      className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <input
-                      value={tradeStateInput}
-                      onChange={(e) => setTradeStateInput(e.target.value)}
-                      placeholder="State (abbrev., e.g., TX)"
-                      className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <p className="text-xs text-gray-500">Quiz location was not available — please provide city and state.</p>
-                  </>
-                )}
-              </div>
+                 {/* New: city/state inline inputs when quiz/location is missing */}
+                 {needLocationInputs && (
+                   <>
+                     <input
+                       value={tradeCityInput}
+                       onChange={(e) => setTradeCityInput(e.target.value)}
+                       placeholder="City (e.g., Austin)"
+                       className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                     />
+                     <input
+                       value={tradeStateInput}
+                       onChange={(e) => setTradeStateInput(e.target.value)}
+                       placeholder="State (abbrev., e.g., TX)"
+                       className="w-full rounded-lg border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                     />
+                     <p className="text-xs text-gray-500">Quiz location was not available — please provide city and state.</p>
+                   </>
+                 )}
+               </div>
 
-              {/* feedback area */}
-              <div className="mt-4">
-                {tradeError && <div className="text-sm text-red-600 mb-2">{tradeError}</div>}
-                {tradeResult != null && (() => {
-                  const formatted = formatTradeValue(tradeResult);
-                  if (formatted.isCurrency) {
-                    return (
-                      <div className="bg-green-50 p-4 rounded-md mb-2 text-left">
-                        <div className="text-sm text-white-700">Estimated Trade‑In Value</div>
-                        <div className="mt-2 text-4xl md:text-10xl font-extrabold text-white-800">
-                          {formatted.formatted}
-                        </div>
-                      </div>
-                    );
-                  }
-                  // fallback for non-numeric results
-                  return (
-                    <div className="text-sm text-green-700 bg-green-50 p-5 rounded-md mb-2 text-left">
-                      <strong>Result:</strong>
-                      <div className="whitespace-pre-wrap">{formatted.formatted}</div>
-                    </div>
-                  );
-                })()}
-              </div>
+               {/* feedback area */}
+               <div className="mt-4">
+                 {tradeError && <div className="text-sm text-red-600 mb-2">{tradeError}</div>}
+                 {tradeResult != null && (() => {
+                   const formatted = formatTradeValue(tradeResult);
+                   if (formatted.isCurrency) {
+                     return (
+                       <div className="bg-green-50 p-4 rounded-md mb-2 text-left">
+                         <div className="text-sm text-white-700">Estimated Trade‑In Value</div>
+                         <div className="mt-2 text-4xl md:text-10xl font-extrabold text-white-800">
+                           {formatted.formatted}
+                         </div>
+                       </div>
+                     );
+                   }
+                   // fallback for non-numeric results
+                   return (
+                     <div className="text-sm text-green-700 bg-green-50 p-5 rounded-md mb-2 text-left">
+                       <strong>Result:</strong>
+                       <div className="whitespace-pre-wrap">{formatted.formatted}</div>
+                     </div>
+                   );
+                 })()}
+               </div>
 
-              <div className="mt-4 flex items-center gap-3">
-                <button
-                  onClick={handleSubmitTrade}
-                  disabled={tradeLoading}
-                  className="flex-1 inline-flex justify-center items-center bg-primary text-white px-4 py-2 rounded-lg hover:opacity-95 disabled:opacity-50"
-                >
-                  {tradeLoading ? "Getting value..." : "Get Value"}
-                </button>
-                <button
-                  onClick={() => setShowTradeModal(false)}
-                  className="px-4 py-2 rounded-lg border border-white-200 bg-transparent text-white-700"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+               {/* add extra top margin so buttons sit further below inputs/feedback */}
+               <div className="mt-6 flex items-center gap-3">
+                 <button
+                   onClick={handleSubmitTrade}
+                   disabled={tradeLoading}
+                   className="flex-1 inline-flex justify-center items-center bg-primary text-white px-4 py-2 rounded-lg hover:opacity-95 disabled:opacity-50"
+                   style={{ cursor: "pointer"}}
+                 >
+                   {tradeLoading ? "Getting value..." : "Get Value"}
+                 </button>
+                 <button
+                   onClick={() => setShowTradeModal(false)}
+                   className="px-4 py-2 rounded-lg border border-white-200 bg-transparent text-white-700"
+                   style={{ backgroundColor: "#ffffff", color: "#404040", borderColor: "#cccccc", cursor: "pointer"}}
+                 >
+                   Close
+                 </button>
+               </div>
+             </div>
+           </div>
+         </>
+       )}
 
     </div>
   );
