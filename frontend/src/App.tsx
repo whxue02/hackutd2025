@@ -156,6 +156,7 @@ function MainApp() {
             selectedIds={selectedForComparison}
             onToggleSelect={handleToggleSelection}
             onCompare={() => setViewMode('compare')}
+            quizAnswers={quizAnswers}
           />
         )}
       </main>

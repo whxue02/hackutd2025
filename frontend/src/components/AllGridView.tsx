@@ -1,13 +1,17 @@
+import React, { useState, useEffect } from "react";
 import { Car } from "../types/car";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { QuizAnswers } from "./Quiz";
+import { predictLoanApproval, LoanPrediction } from "../utils/loanPrediction";
+import { CheckCircle, XCircle, DollarSign, Loader2 } from "lucide-react";
 
 interface AllGridViewProps {
   selectedIds?: string[];
   onToggleSelect?: (id: string) => void;
   onCompare?: () => void;
+  quizAnswers?: QuizAnswers | null;
 }
 
 interface ApiCar {
@@ -37,17 +41,70 @@ interface ApiResponse {
   };
 }
 
-export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: AllGridViewProps) {
+export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizAnswers }: AllGridViewProps) {
   const [cars, setCars] = useState<Car[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<ApiResponse['pagination'] | null>(null);
+  const [selectedCarForLoan, setSelectedCarForLoan] = useState<Car | null>(null);
+  const [loanPrediction, setLoanPrediction] = useState<LoanPrediction | null>(null);
+  const [loanLoading, setLoanLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchCars(currentPage);
   }, [currentPage]);
+
+  useEffect(() => {
+    if (selectedCarForLoan) {
+      console.log("[AllGridView] Modal opened for:", selectedCarForLoan.make, selectedCarForLoan.model, "MSRP:", selectedCarForLoan.financing.msrp);
+      // Clear any existing prediction when car changes
+      setLoanPrediction(null);
+    }
+  }, [selectedCarForLoan]);
+
+  const handleCheckLoanApproval = async (car: Car) => {
+    console.log("========== NEW CAR CLICKED ==========");
+    console.log("[AllGridView] Check Loan Approval clicked for:", car.make, car.model, car.year);
+    console.log("[AllGridView] Car MSRP (from car object):", car.financing?.msrp);
+    
+    if (!quizAnswers) {
+      console.warn("[AllGridView] No quiz answers available");
+      alert("Please complete the quiz first to check loan approval!");
+      return;
+    }
+
+    // Clear previous prediction and set new car FIRST
+    setLoanPrediction(null);
+    setSelectedCarForLoan(car);
+    setLoanLoading(true);
+
+    try {
+      // Verify MSRP is correct before making the call
+      const carMsrp = car.financing?.msrp;
+      if (!carMsrp || carMsrp <= 0) {
+        throw new Error(`Invalid MSRP for ${car.make} ${car.model}: ${carMsrp}`);
+      }
+      
+      console.log("[AllGridView] Calling predictLoanApproval with MSRP:", carMsrp);
+      const prediction = await predictLoanApproval(quizAnswers, car);
+      console.log("[AllGridView] Prediction received:", prediction);
+      console.log("[AllGridView] Prediction was for MSRP:", carMsrp);
+      setLoanPrediction(prediction);
+    } catch (error) {
+      console.error("[AllGridView] Error checking loan approval:", error);
+      alert(`Failed to check loan approval: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setLoanPrediction(null);
+    } finally {
+      setLoanLoading(false);
+    }
+  };
+
+  const closeLoanModal = () => {
+    setSelectedCarForLoan(null);
+    setLoanPrediction(null);
+  };
 
   const fetchCars = async (page: number) => {
     setLoading(true);
@@ -68,10 +125,13 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
         trim: apiCar.trim,
         category: apiCar.type,
         image: apiCar.img_path ? `http://127.0.0.1:5000/images/${apiCar.img_path}` : '/placeholder-car.jpg',
+        safetyRating: 5, // Default safety rating
         financing: {
           msrp: apiCar.msrp,
           invoice: 0,
-          estimatedPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100
+          estimatedPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100,
+          monthlyPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100,
+          apr: 5.49
         },
         gasMileage: {
           city: apiCar.epa_city_mpg || 0,
@@ -82,7 +142,8 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
           horsepower: apiCar.horsepower_hp || 0,
           torque: 0,
           engine: '',
-          transmission: ''
+          transmission: '',
+          drivetrain: ''
         }
       }));
       
@@ -162,6 +223,23 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
                 </div>
               </div>
 
+              {/* Loan Approval Button */}
+              <div className="p-4 pt-0 border-t border-gray-700/50">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleCheckLoanApproval(car);
+                  }}
+                  disabled={!quizAnswers}
+                  className="w-full italic bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="sm"
+                >
+                  <DollarSign className="w-4 h-4 mr-2" />
+                  {quizAnswers ? "Check Loan Approval" : "Complete Quiz First"}
+                </Button>
+              </div>
+
               {/* select button */}
               <button
                 onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect && onToggleSelect(car.id); }}
@@ -174,6 +252,96 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
           );
         })}
       </div>
+
+      {/* Loan Approval Modal */}
+      {selectedCarForLoan && (
+        <div 
+          key={`loan-modal-${selectedCarForLoan.id}-${selectedCarForLoan.financing.msrp}`}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
+          onClick={closeLoanModal}
+        >
+          <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 max-w-md w-full mx-4 border border-primary/40 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-white text-2xl italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+                Loan Approval Check
+              </h3>
+              <button
+                onClick={closeLoanModal}
+                className="text-gray-400 hover:text-white text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <h4 className="text-white mb-2 italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+                {selectedCarForLoan.year} {selectedCarForLoan.make} {selectedCarForLoan.model}
+              </h4>
+              <p className="text-gray-400 italic">MSRP: ${selectedCarForLoan.financing.msrp.toLocaleString()}</p>
+            </div>
+
+            {loanLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                <span className="ml-3 text-white italic">Checking approval...</span>
+              </div>
+            ) : loanPrediction ? (
+              <div className={`p-6 rounded-xl border-2 ${
+                loanPrediction.approved
+                  ? "bg-green-500/10 border-green-500/50"
+                  : "bg-red-500/10 border-red-500/50"
+              }`}>
+                <div className="flex items-center gap-3 mb-4">
+                  {loanPrediction.approved ? (
+                    <CheckCircle className="w-8 h-8 text-green-400" />
+                  ) : (
+                    <XCircle className="w-8 h-8 text-red-400" />
+                  )}
+                  <div>
+                    <p className={`text-xl font-bold italic ${
+                      loanPrediction.approved ? "text-green-300" : "text-red-300"
+                    }`} style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
+                      {loanPrediction.approved ? "Loan Approved!" : "Loan Not Approved"}
+                    </p>
+                    <p className="text-gray-400 italic text-sm mt-1">
+                      {Math.round(loanPrediction.probability * 100)}% probability
+                    </p>
+                  </div>
+                </div>
+                <p className="text-white/80 italic text-sm">
+                  {loanPrediction.reason}
+                </p>
+                <div className="mt-4 pt-4 border-t border-white/10">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-400 italic">Score</p>
+                      <p className="text-white italic font-semibold">{loanPrediction.score}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 italic">Probability</p>
+                      <p className="text-white italic font-semibold">{Math.round(loanPrediction.probability * 100)}%</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <p className="text-gray-500 italic text-xs">
+                      Loan Amount: ${selectedCarForLoan.financing.msrp.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="mt-6">
+              <Button
+                onClick={closeLoanModal}
+                className="w-full italic bg-gray-800 hover:bg-gray-700 text-white"
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pagination Controls */}
       <div className="mt-8 flex justify-center items-center gap-4">
