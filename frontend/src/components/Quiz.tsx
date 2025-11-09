@@ -111,24 +111,33 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
       </div>
 
       {/* === MAIN CONTENT WRAPPER === */}
-      <div className="relative z-10 h-full flex items-center justify-center px-4">
+      <div 
+        className="relative z-10 h-full flex items-center justify-center"
+        style={{
+          paddingLeft: 'max(8.5rem, env(safe-area-inset-left))',
+          paddingRight: 'max(8.5rem, env(safe-area-inset-right))',
+          paddingTop: 'max(0.1rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(0.1rem, env(safe-area-inset-bottom))',
+        }}
+      >
+        {/* Safe Area Container - Centers quiz with proper spacing */}
+        <div className="w-full max-w-[400px] flex items-center justify-center">
+          {/* ✅ ✅ UNDERLAY added — blocks ALL background image bleed */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="
+              w-full
+              max-w-[180px]
+              min-h-[95vh]
+              rounded-3xl
+              bg-white
+              shadow-2xl
+            " />
+          </div>
 
-        {/* ✅ ✅ UNDERLAY added — blocks ALL background image bleed */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="
-            w-full
-            max-w-[180px]
-            min-h-[95vh]
-            rounded-3xl
-            bg-white
-            shadow-2xl
-          " />
-        </div>
+          {/* ✅ ✅ END UNDERLAY */}
 
-        {/* ✅ ✅ END UNDERLAY */}
-
-        {/* === QUIZ COLUMN === */}
-        <div className="w-full max-w-[380px] min-h-[800px] flex flex-col justify-center relative z-20">
+          {/* === QUIZ COLUMN === */}
+          <div className="w-full max-w-[380px] min-h-[800px] flex flex-col justify-center relative z-20">
 
 
           {/* Progress Bar */}
@@ -152,11 +161,11 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="rounded-2xl p-10 md:p-12 border-2 border-gray-300 shadow-2xl flex flex-col justify-between min-h-[700px] relative z-20"
+            className="rounded-2xl p-10 md:p-12 border-2 border-gray-300 shadow-2xl flex flex-col min-h-[700px] relative z-20"
             style={{ backgroundColor: "#ffffff", opacity: 1 }}
           >
             {/* STEP CONTENT */}
-            <div className="flex flex-col justify-center text-center flex-1">
+            <div className="flex flex-col justify-center text-center flex-1 mb-8">
 
               {step === 1 && (
                 <>
@@ -228,7 +237,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
                       className={`w-full p-4 text-base rounded-full ${
                         answers.isCollegeGrad === true
                           ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
-                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
+                          : "bg-white border-2 border-gray-300 text-primary hover:bg-gray-50"
                       }`}
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
@@ -239,7 +248,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
                       className={`w-full p-4 text-base rounded-full ${
                         answers.isCollegeGrad === false
                           ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
-                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
+                          : "bg-white border-2 border-gray-300 text-primary hover:bg-gray-50"
                       }`}
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
@@ -267,7 +276,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
                       className={`w-full p-4 text-base rounded-full ${
                         answers.isSelfEmployed === true
                           ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
-                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
+                          : "bg-white border-2 border-gray-300 text-primary hover:bg-gray-50"
                       }`}
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
@@ -278,7 +287,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
                       className={`w-full p-4 text-base rounded-full ${
                         answers.isSelfEmployed === false
                           ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
-                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
+                          : "bg-white border-2 border-gray-300 text-primary hover:bg-gray-50"
                       }`}
                       style={{ fontFamily: "Inter, sans-serif" }}
                     >
@@ -362,10 +371,10 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
             </div>
 
             {/* ====== NAVIGATION ====== */}
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-6 mt-10 md:mt-4 mb-8 justify-center">
               <Button
                 onClick={handleBack}
-                className="flex-1 p-4 text-base rounded-full bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50"
+                className="max-w-[140px] p-4 text-base rounded-full bg-white border-2 border-gray-300 text-primary hover:bg-gray-50"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
@@ -375,7 +384,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               <Button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex-1 p-4 text-base bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-full text-white shadow-lg shadow-primary/30 border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="max-w-[140px] p-4 text-base bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-full text-white shadow-lg shadow-primary/30 border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {step === 7 ? "Complete" : "Next"}
@@ -383,6 +392,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               </Button>
             </div>
           </motion.div>
+          </div>
         </div>
       </div>
     </div>
