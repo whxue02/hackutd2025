@@ -217,7 +217,7 @@ function MainApp() {
         role="group"
         aria-label="Support and Trade-in"
       >
-        <div className="flex flex-col items-center gap-5" style={{ padding: 'calc(var(--spacing) * 1.5)' }}>
+        <div className="flex flex-col items-center gap-0" style={{ padding: 'calc(var(--spacing) * 1.5)' }}>
           {/* Top: Trade-in (larger two arrows in a circle) */}
           <button
             onClick={handleOpenTradeIn}
@@ -226,7 +226,7 @@ function MainApp() {
             className="w-14 h-14 rounded-xl flex items-center justify-center bg-transparent hover:bg-white/6 transition text-white"
           >
             {/* trade-in icon: two arrows in a circle */}
-            <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white">
               <path d="M7 7h10" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M10 4l-3 3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               <path d="M10 10l-3-3" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -236,7 +236,8 @@ function MainApp() {
             </svg>
           </button>
 
-
+          {/* one-line spacer between icons */}
+          <div aria-hidden style={{ height: '1em' }} />
 
           {/* Bottom: Chatbot (larger chat bubble) */}
           <button
