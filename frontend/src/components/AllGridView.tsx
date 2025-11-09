@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { QuizAnswers } from "./Quiz";
 import { predictLoanApproval, LoanPrediction } from "../utils/loanPrediction";
 import { CheckCircle, XCircle, DollarSign, Loader2, PhoneCall } from "lucide-react";
+import Background from "./paper.png"; // new import
 
 interface AllGridViewProps {
   selectedIds?: string[];
@@ -212,6 +213,8 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
   }
 
   return (
+    <>
+
     <div className="max-w-7xl mx-auto p-6 relative pb-32">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-white italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
@@ -445,5 +448,6 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -12,6 +12,7 @@ import { CarDetail } from "./components/CarDetail";
 import { Button } from "./components/ui/button";
 import Logo from "./components/Logo1.svg";
 //import { Car as CarIcon } from "lucide-react";
+import Background from "./components/paper.png"; // new import
 
 type ViewMode = "swipe" | "compare";
 
@@ -280,10 +281,25 @@ function MainApp() {
   }
 
   return (
+  <>
+{/* Background Image */}
+<div
+  style={{
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    backgroundImage: `url(${Background})`,
+    backgroundSize: "100% auto",
+    backgroundPosition: "top center",
+    backgroundRepeat: "repeat-y",
+    zIndex: 0,
+    pointerEvents: "none",
+  }}
+/>
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
       {/* Animated background grid effect */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(139,21,56,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,21,56,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
-      
       <header className="relative bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-sm shadow-lg shadow-primary/10 border-b border-primary/30 sticky top-0 z-50">
   <div className="max-w-7xl mx-auto px-6 py-4">
     <div className="flex items-center justify-between mb-4">
@@ -540,6 +556,7 @@ function MainApp() {
        )}
 
     </div>
+    </>
   );
 }
 
