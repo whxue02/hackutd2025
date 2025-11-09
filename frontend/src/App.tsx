@@ -22,6 +22,7 @@ function MainApp() {
   const [viewMode, setViewMode] = useState<ViewMode>("swipe");
   const [displayMode, setDisplayMode] = useState<"swipe" | "all">("swipe");
   const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [selectedCarsForComparison, setSelectedCarsForComparison] = useState<Car[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
 
   const handleNavigateFromLanding = (mode: "swipe" | "all" | "quiz") => {
@@ -68,12 +69,27 @@ function MainApp() {
     setSelectedForComparison(likedCars.map(car => car.id));
   };
 
-  const handleToggleSelection = (carId: string) => {
-    setSelectedForComparison((prev) =>
-      prev.includes(carId)
-        ? prev.filter((id) => id !== carId)
-        : [...prev, carId]
-    );
+  const handleToggleSelection = (carId: string, car?: Car) => {
+    setSelectedForComparison((prev) => {
+      const isSelected = prev.includes(carId);
+      if (isSelected) {
+        // Deselect
+        setSelectedCarsForComparison((cars) => cars.filter(c => c.id !== carId));
+        return prev.filter((id) => id !== carId);
+      } else {
+        // Select
+        if (car) {
+          setSelectedCarsForComparison((cars) => {
+            // Avoid duplicates
+            if (cars.find(c => c.id === car.id)) {
+              return cars;
+            }
+            return [...cars, car];
+          });
+        }
+        return [...prev, carId];
+      }
+    });
   };
 
   const handleBackToSwipe = () => {
@@ -139,9 +155,9 @@ function MainApp() {
           <CompareView
             likedCars={likedCars}
             selectedCars={selectedForComparison}
-            onToggleSelection={handleToggleSelection}
+            onToggleSelection={(id: string, car?: Car) => handleToggleSelection(id, car)}
             onBack={handleBackToSwipe}
-            allCars={carData}
+            allCars={[...carData, ...selectedCarsForComparison]}
           />
         ) : displayMode === 'swipe' ? (
           <SwipeView
@@ -154,7 +170,7 @@ function MainApp() {
         ) : (
           <AllGridView
             selectedIds={selectedForComparison}
-            onToggleSelect={handleToggleSelection}
+            onToggleSelect={(id, car) => handleToggleSelection(id, car)}
             onCompare={() => setViewMode('compare')}
             quizAnswers={quizAnswers}
           />

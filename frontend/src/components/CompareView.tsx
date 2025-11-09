@@ -6,7 +6,7 @@ import { Badge } from "./ui/badge";
 interface CompareViewProps {
   likedCars: Car[];
   selectedCars: string[];
-  onToggleSelection: (carId: string) => void;
+  onToggleSelection: (carId: string, car?: Car) => void;
   onBack: () => void;
   allCars?: Car[];
 }
@@ -18,17 +18,40 @@ export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack
   [...likedCars, ...allCars].forEach(c => { lookup[c.id] = c; });
   const carsToCompare = selectedCars.map(id => lookup[id]).filter(Boolean) as Car[];
   
-  const handleTileClick = (carId: string) => {
-    if (selectedCars.includes(carId)) {
+  // Combine all cars for display, avoiding duplicates (prefer likedCars if duplicate)
+  const allAvailableCars: Car[] = [];
+  const seenIds = new Set<string>();
+  
+  // Add liked cars first
+  likedCars.forEach(car => {
+    if (!seenIds.has(car.id)) {
+      allAvailableCars.push(car);
+      seenIds.add(car.id);
+    }
+  });
+  
+  // Add cars from allCars that aren't already in likedCars
+  allCars.forEach(car => {
+    if (!seenIds.has(car.id)) {
+      allAvailableCars.push(car);
+      seenIds.add(car.id);
+    }
+  });
+  
+  const handleTileClick = (car: Car) => {
+    if (selectedCars.includes(car.id)) {
       // Deselect if already selected
-      onToggleSelection(carId);
+      onToggleSelection(car.id, car);
     } else if (selectedCars.length < 2) {
       // Select if less than 2 are selected
-      onToggleSelection(carId);
+      onToggleSelection(car.id, car);
     } else {
       // Replace the first selected car if 2 are already selected
-      onToggleSelection(selectedCars[0]);
-      onToggleSelection(carId);
+      const firstCar = lookup[selectedCars[0]];
+      if (firstCar) {
+        onToggleSelection(selectedCars[0], firstCar);
+      }
+      onToggleSelection(car.id, car);
     }
   };
 
@@ -43,7 +66,7 @@ export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack
               Back to Swiping
             </Button>
             <h2 className="text-white italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-              Your Liked Cars ({likedCars.length})
+              Compare Cars ({allAvailableCars.length} available)
             </h2>
           </div>
           <p className="text-gray-400 italic text-center">
@@ -73,18 +96,24 @@ export function CompareView({ likedCars, selectedCars, onToggleSelection, onBack
           {/* Car Tiles Grid */}
           <div>
             <h3 className="text-white mb-4 italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-              {carsToCompare.length === 2 ? "All Liked Cars" : "Select Cars to Compare"}
+              {carsToCompare.length === 2 ? "All Available Cars" : "Select 2 Cars to Compare"}
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {likedCars.map((car) => (
-                <CarTile
-                  key={car.id}
-                  car={car}
-                  isSelected={selectedCars.includes(car.id)}
-                  onClick={() => handleTileClick(car.id)}
-                />
-              ))}
-            </div>
+            {allAvailableCars.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-400 italic">No cars available to compare. Select cars from the All view first.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {allAvailableCars.map((car) => (
+                  <CarTile
+                    key={car.id}
+                    car={car}
+                    isSelected={selectedCars.includes(car.id)}
+                    onClick={() => handleTileClick(car)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
