@@ -10,13 +10,15 @@ CAR_SECRET = os.getenv("CAR-SECRET")
 
 db = firestore.Client()
 
-response = requests.get("https://carapi.app/api/trims/v2?year>=2020&make=Toyota")
+response = requests.get("https://carapi.app/api/trims/v2?make=Toyota")
 print(response.json())
 
 duplicates = []
 data = []
 
 print(response.json()["collection"]["first"])
+
+i = 1
 
 while True:
         for car in response.json()["data"]:
@@ -45,11 +47,12 @@ while True:
                         print(combined)
                         data.append(combined)
 
+        df = pd.DataFrame(data)
+        df.to_csv('toyota_trims_2020_onwards' + str(i) + '.csv', index=False)
+        data = []
+        i += 1
+
         if response.json()["collection"]["next"] == '':
                 break
 
-        response = requests.get(response.json()["collection"]["next"])
-
-df = pd.DataFrame(data)
-df.to_csv('toyota_trims_2020_onwards.csv', index=False)
-print(df)
+        response = requests.get('https://carapi.app' + response.json()["collection"]["next"])
