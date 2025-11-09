@@ -42,14 +42,18 @@ def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, edu
     # Try to use trained model, fallback to rule-based
     _load_model()
     
+    # Log that MSRP (loan_amount) is being used
+    print(f"[predict_loan_approval] Using MSRP (loan_amount): ${loan_amount:,.2f} as input to ML model")
+    
     if _model is not None and _feature_names is not None:
         try:
             # Create feature vector matching the model's expected format
             # The model expects: income_annum, loan_amount, loan_term, cibil_score, education, self_employed
             # Plus other features that were in the training data (set to 0 or median)
+            # NOTE: loan_amount is the MSRP from the car data
             features = pd.DataFrame({
                 'income_annum': [income_annum],
-                'loan_amount': [loan_amount],
+                'loan_amount': [loan_amount],  # MSRP from car
                 'loan_term': [loan_term],
                 'cibil_score': [cibil_score],
                 'education': [education],
@@ -60,6 +64,8 @@ def predict_loan_approval(income_annum, loan_amount, loan_term, cibil_score, edu
                 'luxury_assets_value': [0],  # Default
                 'bank_asset_value': [0],  # Default
             })
+            
+            print(f"[predict_loan_approval] Feature vector includes loan_amount (MSRP): {features['loan_amount'].values[0]}")
             
             # Ensure all required features are present
             for feature in _feature_names:
