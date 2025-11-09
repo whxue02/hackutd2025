@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { useNavigate } from "react-router-dom";
 
 interface QuizProps {
-  onComplete: (answers: QuizAnswers) => void;
-  onBack: () => void;
+  onComplete?: (answers: QuizAnswers) => void;
+  onBack?: () => void;
 }
 
 export interface QuizAnswers {
@@ -21,6 +22,7 @@ export interface QuizAnswers {
 }
 
 export function Quiz({ onComplete, onBack }: QuizProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<QuizAnswers>({
     annualIncome: "",
@@ -32,20 +34,6 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
     milesPerWeek: "",
   });
 
-  // Reset quiz state when component mounts (for retaking quiz)
-  useEffect(() => {
-    setStep(1);
-    setAnswers({
-      annualIncome: "",
-      creditScore: "",
-      isCollegeGrad: null,
-      isSelfEmployed: null,
-      city: "",
-      state: "",
-      milesPerWeek: "",
-    });
-  }, []);
-
   const handleNext = () => {
     if (step < 7) {
       setStep(step + 1);
@@ -56,16 +44,36 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
         city: answers.city.trim().toLowerCase(),
         state: answers.state.trim().toLowerCase(),
       };
+      
+      // Save to global variable
+      (window as any).quizAnswers = normalizedAnswers;
+      
       console.log("Quiz completed with answers:", normalizedAnswers);
-      onComplete(normalizedAnswers);
+      
+      // Call onComplete if provided, but don't let it block navigation
+      if (onComplete) {
+        try {
+          onComplete(normalizedAnswers);
+        } catch (error) {
+          console.error("Error in onComplete:", error);
+        }
+      }
+      
+      // Navigate after a small delay to ensure state updates
+      setTimeout(() => {
+        console.log("Navigating to home...");
+        navigate("/");
+      }, 100);
     }
   };
 
   const handleBack = () => {
     if (step > 1) {
       setStep(step - 1);
-    } else {
+    } else if (onBack) {
       onBack();
+    } else {
+      navigate("/landing");
     }
   };
 
@@ -123,7 +131,6 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            // ⭐ taller + more padding
             className="bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-sm rounded-2xl p-10 md:p-12 border border-gray-800/50 shadow-2xl flex flex-col justify-between min-h-[700px]"
           >
             {/* ==== STEP CONTENT ==== */}

@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, Grid3x3 } from "lucide-react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
 
 interface LandingPageProps {
@@ -8,6 +9,7 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ onNavigate }: LandingPageProps) {
+  const navigate = useNavigate()
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden m-0 p-0">
       {/* Urban Background Image with Dark Overlay */}
@@ -56,7 +58,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             className="flex flex-row gap-4 justify-center items-center"
           >
             <Button
-              onClick={() => onNavigate("quiz")}
+              onClick={() => navigate("/quiz")}
               size="lg"
               className="px-10 py-6 text-lg bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/30 border border-primary/50 italic group rounded-full text-white"
             >
@@ -65,7 +67,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
             </Button>
 
             <Button
-              onClick={() => onNavigate("all")}
+              onClick={() => navigate("/")}
               size="lg"
               className="px-10 py-6 text-lg bg-transparent hover:bg-black/20 shadow-lg italic group rounded-full border-2 border-white text-white"
             >
