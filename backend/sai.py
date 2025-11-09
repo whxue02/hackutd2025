@@ -16,6 +16,7 @@ ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELE_AGENT_ID = os.getenv("ELE_AGENT_ID")  # ElevenLabs agent id
 ELE_AGENT_PHONE_NUMBER_ID = os.getenv("ELE_AGENT_PHONE_NUMBER_ID")  # phone number configured in ElevenLabs/Twilio
 COLLECT_API_KEY = os.getenv("COLLECT_API")
+MARKET_CHECK_API = os.getenv("MARKET_CHECK_API")
 
 def escape_slash(s):
     if s is None:
@@ -75,13 +76,12 @@ def outbound_call():
 
     return {"message": "Call initiated"}, 200
 
+
 @app.route('/gas-price', methods=['GET'])
 def get_gas_price():
     try:
         city = request.args.get('city')
-        print(city)
         state = request.args.get('state')
-        print(state)
     except:
         city = None
         state = None
@@ -110,6 +110,48 @@ def get_gas_price():
 
     return {"price": round(price, 2)}, 200
 
+
+@app.route('/trade-in-value', methods=['POST'])
+def get_trade_in_value():
+    try:
+        data = request.get_json()
+    except:
+        data = None
+
+    if data is None:
+        return {"error": "No data provided"}, 400
+
+    try:
+        ymm = data["year"] + "|" + data["make"] + "|" + data["model"]
+    except Exception as e:
+        print(e)
+        return {"error": "Missing data"}, 400
+
+    try:
+        city_state = data["city"] + "|" + data["state-ac"]
+    except Exception as e:
+        city_state = "dallas|TX"
+
+    # Fetch trade-in value from third-party API
+    headers = {
+        "Accept": "application/json",
+    }
+    params = {
+        "api_key": MARKET_CHECK_API,
+        "ymm": ymm,
+        "city_state": city_state
+    }
+    resp = requests.get('https://api.marketcheck.com/v2/sales/car', headers=headers, params=params)
+
+
+    if resp.status_code != 200:
+        return {"error": "Failed to fetch trade-in value"}, 500
+
+    print(resp.json())
+    price_stats = resp.json()["price_stats"]
+    return {"trade-in-value": price_stats['mean']}, 200
+
+
 @app.route('/data/cars', methods=['GET'])
 def get_cars():
     try:
@@ -128,6 +170,7 @@ def get_cars():
         return {"hack-id": hack_id, "data": doc.to_dict()}, 200 # Return only the phone number
     else:
         return {"error": "hack-id not found"}, 404
+
 
 @app.route('/data/cars', methods=['POST'])
 def add_car():
@@ -529,6 +572,7 @@ def add_car():
     })
     return {"message": "Car added"}, 200
 
+
 @app.route('/predict/loan', methods=['POST'])
 def predict_loan():
     try:
@@ -562,7 +606,6 @@ def predict_loan():
     except Exception as e:
         print(f"Error in loan prediction: {e}")
         return {"error": str(e)}, 500
-
 
 
 if __name__ == '__main__':
