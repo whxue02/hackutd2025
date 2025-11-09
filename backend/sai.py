@@ -15,6 +15,7 @@ db = firestore.Client(
 ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
 ELE_AGENT_ID = os.getenv("ELE_AGENT_ID")  # ElevenLabs agent id
 ELE_AGENT_PHONE_NUMBER_ID = os.getenv("ELE_AGENT_PHONE_NUMBER_ID")  # phone number configured in ElevenLabs/Twilio
+COLLECT_API_KEY = os.getenv("COLLECT_API")
 
 def escape_slash(s):
     if s is None:
@@ -73,6 +74,41 @@ def outbound_call():
     print("Created outbound call:", json.dumps(data, indent=2))
 
     return {"message": "Call initiated"}, 200
+
+@app.route('/gas-price', methods=['GET'])
+def get_gas_price():
+    try:
+        city = request.args.get('city')
+        print(city)
+        state = request.args.get('state')
+        print(state)
+    except:
+        city = None
+        state = None
+
+    if city is None or state is None:
+        return {"error": "No city, state pair provided"}, 404
+
+    # Fetch gas price from third-party API
+    headers = {
+        "authorization": COLLECT_API_KEY,
+        "content-type": "application/json"
+    }
+
+    resp = requests.get(f'https://api.collectapi.com/gasPrice/fromCity?city={city}, {state}', headers=headers)
+    if resp.status_code != 200:
+        return {"error": "Failed to fetch gas price"}, 500
+
+    print(resp.json())
+    if resp.json()["result"]["currency"] == "usd":
+        if resp.json()["result"]["unit"] == "liter":
+            price = float(resp.json()["result"]["gasoline"]) * 3.78541178
+        else:
+            price = float(resp.json()["result"]["gasoline"])
+    else:
+        return {"error": "Unsupported currency"}, 500
+
+    return {"price": round(price, 2)}, 200
 
 @app.route('/data/cars', methods=['GET'])
 def get_cars():
