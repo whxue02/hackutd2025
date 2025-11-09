@@ -82,7 +82,7 @@ def query_rag(question):
     {context}
 
     Question: {question}
-    Answer in a helpful, clear way.
+    Answer in a helpful, clear way. Don't use markdown. keep it concise.
     """
 
     model = genai.GenerativeModel("gemini-2.0-flash-exp")

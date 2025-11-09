@@ -27,6 +27,7 @@ interface ApiCar {
   horsepower_hp: number;
   type: string;
   img_path: string;
+  estimated_current_cost: number;
 }
 
 interface ApiResponse {
@@ -59,7 +60,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
 
   useEffect(() => {
     if (selectedCarForLoan) {
-      console.log("[AllGridView] Modal opened for:", selectedCarForLoan.make, selectedCarForLoan.model, "MSRP:", selectedCarForLoan.financing.msrp);
+      console.log("[AllGridView] Modal opened for:", selectedCarForLoan.make, selectedCarForLoan.model, "Estimated Deprecated Price:", selectedCarForLoan.financing.estimated_current_cost);
       // Clear any existing prediction when car changes
       setLoanPrediction(null);
     }
@@ -68,7 +69,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
   const handleCheckLoanApproval = async (car: Car) => {
     console.log("========== NEW CAR CLICKED ==========");
     console.log("[AllGridView] Check Loan Approval clicked for:", car.make, car.model, car.year);
-    console.log("[AllGridView] Car MSRP (from car object):", car.financing?.msrp);
+    console.log("[AllGridView] Car Estimated Cost (from car object):", car.financing?.estimated_current_cost);
     
     if (!quizAnswers) {
       console.warn("[AllGridView] No quiz answers available");
@@ -83,7 +84,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
 
     try {
       // Verify MSRP is correct before making the call
-      const carMsrp = car.financing?.msrp;
+      const carMsrp = car.financing?.estimated_current_cost;
       if (!carMsrp || carMsrp <= 0) {
         throw new Error(`Invalid MSRP for ${car.make} ${car.model}: ${carMsrp}`);
       }
@@ -130,7 +131,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
         financing: {
           msrp: apiCar.msrp,
           invoice: 0,
-          estimatedPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100,
+          estimated_current_cost: apiCar.estimated_current_cost,
           monthlyPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100,
           apr: 5.49
         },
@@ -249,8 +250,8 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
                   </h4>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 italic">MSRP:</span>
-                      <span className="text-white italic">${car.financing.msrp.toLocaleString()}</span>
+                      <span className="text-gray-400 italic">Estimate Current Cost:</span>
+                      <span className="text-white italic">${car.financing.estimated_current_cost.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-400 italic">MPG:</span>
