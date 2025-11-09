@@ -384,7 +384,7 @@ function CommutingCostComparison({ cars, city, state, milesPerWeek }: CommutingC
         <h4 className="text-white mb-4 italic text-xl" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
           Weekly Commuting Cost Comparison
         </h4>
-        <p className="text-gray-400 italic">Loading gas price data from sai.py...</p>
+        <p className="text-gray-400 italic">Loading gas price data...</p>
       </div>
     );
   }
@@ -417,7 +417,7 @@ function CommutingCostComparison({ cars, city, state, milesPerWeek }: CommutingC
         Weekly Commuting Cost Comparison
       </h4>
       <p className="text-gray-400 italic text-sm mb-4">
-        Based on {milesPerWeek} miles/week in {city}, {state} • Gas: ${gasPrice.toFixed(2)}/gallon (from sai.py)
+        Based on {milesPerWeek} miles/week in {city}, {state} • Gas: ${gasPrice.toFixed(2)}/gallon
       </p>
 
       {error && (

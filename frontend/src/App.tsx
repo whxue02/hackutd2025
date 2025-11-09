@@ -37,10 +37,108 @@ function MainApp() {
     // Placeholder: open chatbot modal here
   };
 
-  const handleOpenTradeIn = () => {
+  const handleOpenTradeIn = async () => {
     console.log("Trade-in button clicked");
     setTradeInRequested(true);
-    // Placeholder: open trade-in modal here
+
+    // Ask the user for the car they own
+    const year = window.prompt("Enter the year of your car (e.g., 2023):")?.trim();
+    if (!year) {
+      console.log("Trade-in aborted: no year provided");
+      return;
+    }
+    const make = window.prompt("Enter the make of your car (e.g., Toyota):")?.trim();
+    if (!make) {
+      console.log("Trade-in aborted: no make provided");
+      return;
+    }
+    const model = window.prompt("Enter the model of your car (e.g., Corolla):")?.trim();
+    if (!model) {
+      console.log("Trade-in aborted: no model provided");
+      return;
+    }
+
+    // Use quizAnswers for city/state if available; otherwise prompt the user
+    const qa: any = quizAnswers;
+    let city = qa?.city || qa?.cityName || qa?.location?.city;
+    let stateAc = qa?.['state-ac'] || qa?.state || qa?.stateAc || qa?.stateAbbr;
+
+    if (!city) {
+      city = window.prompt("Enter your city (e.g., dallas):")?.trim();
+      if (!city) {
+        console.log("Trade-in aborted: no city provided");
+        return;
+      }
+    }
+    if (!stateAc) {
+      stateAc = window.prompt("Enter your state abbreviation (e.g., TX):")?.trim();
+      if (!stateAc) {
+        console.log("Trade-in aborted: no state provided");
+        return;
+      }
+    }
+
+    const payload = {
+      year,
+      make,
+      model,
+      city: city.toLowerCase(),
+      // use the exact JSON key "state-ac"
+      ['state-ac']: stateAc.toLowerCase(),
+    };
+
+    try {
+      const res = await fetch("http://127.0.0.1:5001/trade-in-value", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Trade-in API error:", res.status, text);
+        alert(`Trade-in service returned ${res.status}`);
+        return;
+      }
+
+      const data = await res.json();
+      console.log("Trade-in response:", data);
+      // Extract a sensible scalar result if possible (handles {"trade-in-value": 20359})
+      const extractResult = (d: any) => {
+        if (d == null) return "No result";
+        if (typeof d === "string" || typeof d === "number" || typeof d === "boolean") return d;
+        if (typeof d === "object") {
+          // Common key variations to look for
+          const keysToCheck = ["trade-in-value", "tradeInValue", "trade_in_value", "value", "tradeIn", "amount"];
+          for (const k of keysToCheck) {
+            if (k in d) return d[k];
+          }
+          // If object has a single key, return its value
+          const objKeys = Object.keys(d);
+          if (objKeys.length === 1) return d[objKeys[0]];
+          // try nested common wrappers
+          for (const wrapper of ["result", "data", "payload"]) {
+            if (wrapper in d) {
+              const inner = d[wrapper];
+              if (inner == null) return inner;
+              if (typeof inner === "object") {
+                const innerKeys = Object.keys(inner);
+                if (innerKeys.length === 1) return inner[innerKeys[0]];
+              } else return inner;
+            }
+          }
+          // fallback: return the whole object as pretty JSON
+          return JSON.stringify(d, null, 2);
+        }
+        return String(d);
+      };
+
+      const resultValue = extractResult(data);
+      alert("Trade-in result:\n" + resultValue);
+    } catch (err) {
+      console.error("Trade-in request failed:", err);
+      alert("Failed to contact trade-in service.");
+    }
   };
 
   const handleNavigateFromLanding = (mode: "swipe" | "all" | "quiz") => {
