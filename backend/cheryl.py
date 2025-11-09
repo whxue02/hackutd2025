@@ -30,7 +30,7 @@ def escape_slash(s):
 
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=["http://localhost:3000"])
 
 @app.route("/images/<filename>")
 def serve_image(filename):
@@ -177,6 +177,29 @@ def get_cars():
             "has_prev": page > 1
         }
     }), 200
+
+@app.route('/data/cars/<hack_id>', methods=['GET'])
+def get_car_by_hack_id(hack_id):
+    # Replace % with space
+    hack_id_cleaned = hack_id.replace('%', ' ')
+    
+    car_ref = db.collection("cars").document(hack_id_cleaned)
+    doc = car_ref.get()
+    
+    if not doc.exists:
+        return jsonify({"error": "Car not found"}), 404
+    
+    car_data = doc.to_dict()
+    
+    # If no image path, fetch and save it
+    if not car_data.get("img_path"):
+        img_path = fetch_and_save_image(hack_id_cleaned, car_ref)
+        if img_path:
+            car_data["img_path"] = img_path
+
+    car_data["hack_id"] = hack_id_cleaned
+    
+    return jsonify(car_data), 200
 
 @app.route("/ask", methods=["POST"])
 def ask():

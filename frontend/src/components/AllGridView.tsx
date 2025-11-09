@@ -2,6 +2,7 @@ import { Car } from "../types/car";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface AllGridViewProps {
   selectedIds?: string[];
@@ -10,6 +11,7 @@ interface AllGridViewProps {
 }
 
 interface ApiCar {
+  hack_id: string;
   id: number;
   year: number;
   make: string;
@@ -41,6 +43,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<ApiResponse['pagination'] | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCars(currentPage);
@@ -58,12 +61,14 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
       // Transform API data to match Car interface
       const transformedCars: Car[] = data.cars.map(apiCar => ({
         id: apiCar.id.toString(),
+        hack_id: apiCar.hack_id,
         year: apiCar.year,
         make: apiCar.make,
         model: apiCar.model,
         trim: apiCar.trim,
         category: apiCar.type,
-        image: apiCar.img_path ? `http://127.0.0.1:5000/images/${apiCar.img_path}` : '/placeholder-car.jpg',        financing: {
+        image: apiCar.img_path ? `http://127.0.0.1:5000/images/${apiCar.img_path}` : '/placeholder-car.jpg',
+        financing: {
           msrp: apiCar.msrp,
           invoice: 0,
           estimatedPayment: Math.round((apiCar.msrp * 0.02) * 100) / 100
@@ -122,10 +127,9 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
           const selected = selectedIds.includes(car.id);
           return (
             <div key={car.id} className={`relative rounded-xl overflow-hidden border-2 transition-all ${selected ? 'ring-2 ring-primary/70 border-primary/60' : 'bg-gradient-to-br from-gray-900 via-gray-800 to-black hover:border-primary/50 hover:shadow-md hover:shadow-primary/20'}`}>
-              <a
-                href={`./detail.html?model=${encodeURIComponent(car.model)}`}
+              <div
                 className="block cursor-pointer"
-                onClick={() => { /* link navigation only */ }}
+                onClick={() => navigate(`/car/${car.hack_id}`)}
               >
                 <div className="relative h-40">
                   <img src={car.image} alt={`${car.make} ${car.model}`} className="w-full h-full object-cover" />
@@ -156,7 +160,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare }: All
                     </div>
                   </div>
                 </div>
-              </a>
+              </div>
 
               {/* select button */}
               <button

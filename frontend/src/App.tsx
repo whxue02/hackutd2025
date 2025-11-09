@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Car } from "./types/car";
 import { carData } from "./data/cars";
 import { SwipeView } from "./components/SwipeView";
@@ -6,12 +7,14 @@ import { CompareView } from "./components/CompareView";
 import { AllGridView } from "./components/AllGridView";
 import { LandingPage } from "./components/LandingPage";
 import { Quiz, QuizAnswers } from "./components/Quiz";
+import { CarDetail } from "./components/CarDetail";
 import { Button } from "./components/ui/button";
 import { Car as CarIcon } from "lucide-react";
 
 type ViewMode = "swipe" | "compare";
 
-export default function App() {
+function MainApp() {
+  const navigate = useNavigate();
   const [showLanding, setShowLanding] = useState(true);
   const [showQuiz, setShowQuiz] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -150,7 +153,6 @@ export default function App() {
           />
         ) : (
           <AllGridView
-            cars={carData}
             selectedIds={selectedForComparison}
             onToggleSelect={handleToggleSelection}
             onCompare={() => setViewMode('compare')}
@@ -158,5 +160,16 @@ export default function App() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/car/:hackId" element={<CarDetail />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
