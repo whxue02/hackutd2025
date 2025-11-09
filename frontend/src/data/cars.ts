@@ -3,21 +3,21 @@ import { Car } from "../types/car";
 export const carData: Car[] = [
   {
     id: "1",
-    make: "Tesla",
-    model: "Model 3",
-    year: 2024,
-    category: "Electric",
-    image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80",
+    make: "Toyota",
+    model: "4Runner",
+    year: 2020,
+    category: "SUV",
+    image: "http://127.0.0.1:5000/images/b8187e469a4b44949114cf4e99cf10e1.jpeg",
     specs: {
-      engine: "Electric Motor",
-      horsepower: 283,
+      engine: "4L V6",
+      horsepower: 270,
       transmission: "Single-Speed",
-      drivetrain: "RWD"
+      drivetrain: "REAR WHEEL DRIVE"
     },
-    safetyRating: 5,
+    safetyRating: 4,
     gasMileage: {
-      city: 142,
-      highway: 132
+      city: 17,
+      highway: 22
     },
     financing: {
       msrp: 40240,
@@ -51,11 +51,11 @@ export const carData: Car[] = [
   },
   {
     id: "3",
-    make: "Ford",
-    model: "F-150",
-    year: 2024,
-    category: "Truck",
-    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&q=80",
+    make: "Toyota",
+    model: "4Runner",
+    year: 2020,
+    category: "SUV",
+    image: "http://127.0.0.1:5000/images/6f2aa65a2ef440bf9f39997bada1575b.jpeg",
     specs: {
       engine: "3.5L V6 EcoBoost",
       horsepower: 400,
@@ -75,11 +75,11 @@ export const carData: Car[] = [
   },
   {
     id: "4",
-    make: "Honda",
-    model: "CR-V",
+    make: "Toyota",
+    model: "Camry",
     year: 2024,
-    category: "SUV",
-    image: "https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800&q=80",
+    category: "Sedan",
+    image: "http://127.0.0.1:5000/images/c77336b80c984ed0a4f7913c5222adef.jpeg",
     specs: {
       engine: "1.5L Turbo 4-Cylinder",
       horsepower: 190,
@@ -99,11 +99,11 @@ export const carData: Car[] = [
   },
   {
     id: "5",
-    make: "BMW",
-    model: "3 Series",
-    year: 2024,
-    category: "Luxury",
-    image: "https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800&q=80",
+    make: "Toyota",
+    model: "Land Cruiser",
+    year: 2020,
+    category: "SUV",
+    image: "http://127.0.0.1:5000/images/99c54f9099144857b99159ce416f8fdf.jpeg",
     specs: {
       engine: "2.0L Turbo 4-Cylinder",
       horsepower: 255,
