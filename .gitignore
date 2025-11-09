@@ -12,6 +12,7 @@
 
 # Backend
 **/.env
+**/__pycache__
 
 
 # Frontend
