@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { QuizAnswers } from "./Quiz";
 import { predictLoanApproval, LoanPrediction } from "../utils/loanPrediction";
 import { CheckCircle, XCircle, DollarSign, Loader2, PhoneCall } from "lucide-react";
-import Background from "./paper.png"; // new import
+import { transform } from "motion/react";
 
 interface AllGridViewProps {
   selectedIds?: string[];
@@ -52,7 +52,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
   const [selectedCarForLoan, setSelectedCarForLoan] = useState<Car | null>(null);
   const [loanPrediction, setLoanPrediction] = useState<LoanPrediction | null>(null);
   const [loanLoading, setLoanLoading] = useState(false);
-  const [callLoading, setCallLoading] = useState<{[id: string]: boolean}>({}); // track per-car call loading if desired
+  const [callLoading, setCallLoading] = useState<{[id: string]: boolean}>({});
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -61,56 +61,30 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
 
   useEffect(() => {
     if (selectedCarForLoan) {
-      console.log("[AllGridView] Modal opened for:", selectedCarForLoan.make, selectedCarForLoan.model, "Estimated Deprecated Price:", selectedCarForLoan.financing.estimated_current_cost);
-      // Clear any existing prediction when car changes
       setLoanPrediction(null);
     }
   }, [selectedCarForLoan]);
 
   const handleCheckLoanApproval = async (car: Car) => {
-    console.log("========== NEW CAR CLICKED ==========");
-    console.log("[AllGridView] Check Loan Approval clicked for:", car.make, car.model, car.year);
-    console.log("[AllGridView] Car MSRP (from car.financing.msrp):", car.financing?.msrp);
-    console.log("[AllGridView] Quiz Answers Available:", !!quizAnswers);
-    
     if (!quizAnswers) {
-      console.warn("[AllGridView] No quiz answers available");
       alert("Please complete the quiz first to check loan approval!");
       return;
     }
 
-    // Log quiz answers to verify they're being used
-    console.log("========== QUIZ ANSWERS BEING USED ==========");
-    console.log("[AllGridView] Quiz Answers:", {
-      annualIncome: quizAnswers.annualIncome,
-      creditScore: quizAnswers.creditScore,
-      isCollegeGrad: quizAnswers.isCollegeGrad,
-      isSelfEmployed: quizAnswers.isSelfEmployed,
-      city: quizAnswers.city,
-      state: quizAnswers.state,
-      milesPerWeek: quizAnswers.milesPerWeek
-    });
-
-    // Clear previous prediction and set new car FIRST
     setLoanPrediction(null);
     setSelectedCarForLoan(car);
     setLoanLoading(true);
 
     try {
-      // Verify MSRP is correct before making the call - use msrp, not estimated_current_cost
       const carMsrp = car.financing?.msrp;
       if (!carMsrp || carMsrp <= 0) {
         throw new Error(`Invalid MSRP for ${car.make} ${car.model}: ${carMsrp}`);
       }
       
-      console.log("[AllGridView] Calling predictLoanApproval with MSRP:", carMsrp);
-      console.log("[AllGridView] Quiz answers being passed:", quizAnswers);
       const prediction = await predictLoanApproval(quizAnswers, car);
-      console.log("[AllGridView] Prediction received:", prediction);
-      console.log("[AllGridView] Prediction was for MSRP:", carMsrp);
       setLoanPrediction(prediction);
     } catch (error) {
-      console.error("[AllGridView] Error checking loan approval:", error);
+      console.error("Error checking loan approval:", error);
       alert(`Failed to check loan approval: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setLoanPrediction(null);
     } finally {
@@ -132,7 +106,6 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
       
       const data: ApiResponse = await response.json();
       
-      // Transform API data to match Car interface
       const transformedCars: Car[] = data.cars.map(apiCar => ({
         id: apiCar.id.toString(),
         hack_id: apiCar.hack_id,
@@ -142,7 +115,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
         trim: apiCar.trim,
         category: apiCar.type,
         image: apiCar.img_path ? `http://127.0.0.1:5000/images/${apiCar.img_path}` : '/placeholder-car.jpg',
-        safetyRating: 5, // Default safety rating
+        safetyRating: 5,
         financing: {
           msrp: apiCar.msrp,
           invoice: 0,
@@ -173,11 +146,9 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
     }
   };
 
-  // handler to POST to dealer-call with no data
   const handleDealerCall = async (carId?: string) => {
     try {
       if (carId) setCallLoading(prev => ({ ...prev, [carId]: true }));
-      else {} // no-op if no id given
 
       const res = await fetch("http://127.0.0.1:5001/dealer-call", {
         method: "POST",
@@ -186,8 +157,6 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
       if (!res.ok) {
         const text = await res.text().catch(() => "");
         console.error("Dealer call failed:", res.status, text);
-      } else {
-        console.log("Dealer call triggered");
       }
     } catch (err) {
       console.error("Error calling dealer:", err);
@@ -198,256 +167,428 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="text-white text-xl italic">Loading cars...</div>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ color: '#1a1a1a', fontSize: '20px', fontWeight: '500' }}>Loading cars...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto p-6 flex items-center justify-center min-h-screen">
-        <div className="text-red-500 text-xl italic">Error: {error}</div>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ color: '#8b1538', fontSize: '20px', fontWeight: '500' }}>Error: {error}</div>
       </div>
     );
   }
 
   return (
     <>
+      {/* Background Image */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100vh',
+        backgroundImage: 'url(/images/image.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        opacity: 0.15,
+        zIndex: 0,
+        pointerEvents: 'none'
+      }} />
 
-    <div className="max-w-7xl mx-auto p-6 relative pb-32">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-white italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-          All Cars {pagination && `(${pagination.total_cars} total)`}
-        </h3>
-        <div className="text-gray-400 text-sm italic">
-          Page {pagination?.page} of {pagination?.total_pages}
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '24px', position: 'relative', zIndex: 1, paddingBottom: '128px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ color: '#1a1a1a', fontSize: '24px', fontWeight: '600', margin: 0 }}>
+            All Cars {pagination && `(${pagination.total_cars} total)`}
+          </h3>
+          <div style={{ color: '#666', fontSize: '14px' }}>
+            Page {pagination?.page} of {pagination?.total_pages}
+          </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {cars.map((car) => {
-          const selected = selectedIds.includes(car.id);
-          const isCalling = !!callLoading[car.id];
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+          {cars.map((car) => {
+            const selected = selectedIds.includes(car.id);
+            const isCalling = !!callLoading[car.id];
 
-          return (
-            <div key={car.id} className={`relative rounded-xl overflow-hidden border-2 transition-all ${selected ? 'ring-2 ring-primary/70 border-primary/60' : 'bg-gradient-to-br from-gray-900 via-gray-800 to-black hover:border-primary/50 hover:shadow-md hover:shadow-primary/20'}`}>
-              <div
-                className="block cursor-pointer"
-                onClick={() => navigate(`/car/${car.hack_id}`)}
+            return (
+              <div 
+                key={car.id} 
+                style={{
+                  position: 'relative',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  background: '#fdfdfd',
+                  boxShadow: selected ? '0 4px 20px rgba(139, 21, 56, 0.3)' : '0 2px 12px rgba(0,0,0,0.1)',
+                  border: selected ? '2px solid #8b1538' : '1px solid rgba(0,0,0,0.04)',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer'
+                }}
               >
-                <div className="relative h-40">
-                  <img src={car.image} alt={`${car.make} ${car.model}`} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white border-0 px-3 py-1 shadow-lg shadow-primary/50 italic text-xs">
+                <div onClick={() => navigate(`/car/${car.hack_id}`)}>
+                  <div style={{ position: 'relative', height: '160px' }}>
+                    <img 
+                      src={car.image} 
+                      alt={`${car.make} ${car.model}`} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '12px',
+                      background: '#e3000d',
+                      color: '#fff',
+                      padding: '4px 12px',
+                      borderRadius: '12px',
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                    }}>
                       {car.category}
-                    </Badge>
+                    </div>
+
+                    {/* Phone call button */}
+                    <div style={{ position: 'absolute', bottom: '12px', right: '12px' }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleDealerCall(car.id); }}
+                        disabled={isCalling}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '40px',
+                          height: '40px',
+                          borderRadius: '50%',
+                          background: '#e3000d',
+                          color: '#fff',
+                          border: 'none',
+                          cursor: isCalling ? 'not-allowed' : 'pointer',
+                          opacity: isCalling ? 0.6 : 1,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          transition: 'transform 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => !isCalling && (e.currentTarget.style.transform = 'scale(1.05)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                      >
+                        <PhoneCall style={{ width: '16px', height: '16px' }} />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* phone call button positioned bottom-right of the image */}
-                  <div className="absolute bottom-3 right-3">
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleDealerCall(car.id); }}
-                      disabled={isCalling}
-                      aria-label="Call dealer"
-                      className={`flex items-center justify-center w-10 h-10 rounded-full bg-primary/95 text-white shadow-lg hover:scale-105 transition-transform ${
-                        isCalling ? "opacity-60 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <PhoneCall className="w-4 h-4" />
-                    </button>
+                  <div style={{ padding: '16px' }}>
+                    <h4 style={{ color: '#1a1a1a', marginBottom: '8px', fontSize: '16px', fontWeight: '600', margin: '0 0 12px 0' }}>
+                      {car.year} {car.make} {car.model}
+                    </h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                        <span style={{ color: '#666' }}>Estimated Cost:</span>
+                        <span style={{ color: '#1a1a1a', fontWeight: '500' }}>${car.financing.estimated_current_cost.toLocaleString()}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                        <span style={{ color: '#666' }}>MPG:</span>
+                        <span style={{ color: '#1a1a1a', fontWeight: '500' }}>{car.gasMileage.city}/{car.gasMileage.highway}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
+                        <span style={{ color: '#666' }}>Power:</span>
+                        <span style={{ color: '#1a1a1a', fontWeight: '500' }}>{car.specs.horsepower} HP</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <h4 className="text-white mb-2 italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-                    {car.year} {car.make} {car.model}
-                  </h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 italic">Estimate Current Cost:</span>
-                      <span className="text-white italic">${car.financing.estimated_current_cost.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 italic">MPG:</span>
-                      <span className="text-white italic">{car.gasMileage.city}/{car.gasMileage.highway}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400 italic">Power:</span>
-                      <span className="text-white italic">{car.specs.horsepower} HP</span>
-                    </div>
-                  </div>
+                {/* Loan Approval Button */}
+                <div style={{ padding: '0 16px 16px 16px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleCheckLoanApproval(car);
+                    }}
+                    disabled={!quizAnswers}
+                    style={{
+                      width: '100%',
+                      padding: '10px',
+                      background: quizAnswers ? '#e3000d' : '#e0e0e0',
+                      color: quizAnswers ? '#fff' : '#999',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      fontWeight: '500',
+                      cursor: quizAnswers ? 'pointer' : 'not-allowed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      marginTop: '12px',
+                      boxShadow: quizAnswers ? '0 2px 8px rgba(139, 21, 56, 0.2)' : 'none',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <DollarSign style={{ width: '16px', height: '16px' }} />
+                    {quizAnswers ? "Check Loan Approval" : "Complete Quiz First"}
+                  </button>
                 </div>
-              </div>
 
-              {/* Loan Approval Button */}
-              <div className="p-4 pt-0 border-t border-gray-700/50">
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    handleCheckLoanApproval(car);
+                {/* Select button */}
+                <button
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    e.preventDefault(); 
+                    onToggleSelect && onToggleSelect(car.id, car); 
                   }}
-                  disabled={!quizAnswers}
-                  className="w-full italic bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                  size="sm"
+                  style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: selected ? '#8b1538' : '#fdfdfd',
+                    color: selected ? '#fff' : '#1a1a1a',
+                    border: 'none',
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                    fontSize: '18px',
+                    fontWeight: '600'
+                  }}
                 >
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  {quizAnswers ? "Check Loan Approval" : "Complete Quiz First"}
-                </Button>
+                  {selected ? '✓' : '+'}
+                </button>
               </div>
-
-              {/* select button */}
-              <button
-                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onToggleSelect && onToggleSelect(car.id, car); }}
-                className={`absolute top-3 left-3 w-9 h-9 rounded-full flex items-center justify-center ${selected ? 'bg-primary text-black' : 'bg-white/6 text-white'} shadow-md`}
-                title={selected ? 'Deselect' : 'Select for compare'}
-              >
-                {selected ? '✓' : '+'}
-              </button>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Loan Approval Modal */}
-      {selectedCarForLoan && (
-        <div 
-          key={`loan-modal-${selectedCarForLoan.id}-${selectedCarForLoan.financing.msrp}`}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" 
-          onClick={closeLoanModal}
-        >
-          <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl p-8 max-w-md w-full mx-4 border border-primary/40 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-white text-2xl italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-                Loan Approval Check
-              </h3>
-              <button
-                onClick={closeLoanModal}
-                className="text-gray-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <h4 className="text-white mb-2 italic" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-                {selectedCarForLoan.year} {selectedCarForLoan.make} {selectedCarForLoan.model}
-              </h4>
-              <p className="text-gray-400 italic">MSRP: ${selectedCarForLoan.financing.msrp.toLocaleString()}</p>
-            </div>
-
-            {loanLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-8 h-8 text-primary animate-spin" />
-                <span className="ml-3 text-white italic">Checking approval...</span>
-              </div>
-            ) : loanPrediction ? (
-              <div className={`p-6 rounded-xl border-2 ${
-                loanPrediction.approved
-                  ? "bg-green-500/10 border-green-500/50"
-                  : "bg-red-500/10 border-red-500/50"
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  {loanPrediction.approved ? (
-                    <CheckCircle className="w-8 h-8 text-green-400" />
-                  ) : (
-                    <XCircle className="w-8 h-8 text-red-400" />
-                  )}
-                  <div>
-                    <p className={`text-xl font-bold italic ${
-                      loanPrediction.approved ? "text-green-300" : "text-red-300"
-                    }`} style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>
-                      {loanPrediction.approved ? "Loan Approved!" : "Loan Not Approved"}
-                    </p>
-                    <p className="text-gray-400 italic text-sm mt-1">
-                      {Math.round(loanPrediction.probability * 100)}% probability
-                    </p>
-                  </div>
-                </div>
-                <p className="text-white/80 italic text-sm">
-                  {loanPrediction.reason}
-                </p>
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-400 italic">Score</p>
-                      <p className="text-white italic font-semibold">{loanPrediction.score}</p>
-                    </div>
-                    <div>
-                      <p className="text-gray-400 italic">Probability</p>
-                      <p className="text-white italic font-semibold">{Math.round(loanPrediction.probability * 100)}%</p>
-                    </div>
-                  </div>
-                  <div className="mt-3 pt-3 border-t border-white/5">
-                    <p className="text-gray-500 italic text-xs">
-                      Loan Amount: ${selectedCarForLoan.financing.msrp.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="mt-6">
-              <Button
-                onClick={closeLoanModal}
-                className="w-full italic bg-gray-800 hover:bg-gray-700 text-white"
-              >
-                Close
-              </Button>
-            </div>
-          </div>
+            );
+          })}
         </div>
-      )}
 
-      {/* Pagination Controls */}
-      <div className="mt-8 flex justify-center items-center gap-4">
-        <Button
-          onClick={() => setCurrentPage(p => p - 1)}
-          disabled={!pagination?.has_prev}
-          className={`italic px-6 py-2 ${pagination?.has_prev ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-white/6 text-white/40 cursor-not-allowed'}`}
-        >
-          Previous
-        </Button>
-        <div className="text-white italic">
-          Page {pagination?.page} of {pagination?.total_pages}
-        </div>
-        <Button
-          onClick={() => setCurrentPage(p => p + 1)}
-          disabled={!pagination?.has_next}
-          className={`italic px-6 py-2 ${pagination?.has_next ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-white/6 text-white/40 cursor-not-allowed'}`}
-        >
-          Next
-        </Button>
-      </div>
-
-      {/* Inline compare bar (always visible in content) - easier to notice */}
-      <div className="mt-6">
-        <div className="sticky bottom-0 left-0 right-0 z-40 flex justify-center items-center py-4 bg-gradient-to-t from-black/60 via-transparent to-transparent">
-          <Button
-            onClick={() => onCompare && onCompare()}
-            className={`italic px-6 py-3 ${selectedIds.length >= 2 ? 'bg-gradient-to-r from-primary to-primary/80 text-white' : 'bg-white/6 text-white/40 cursor-not-allowed'}`}
-            disabled={selectedIds.length < 2}
+        {/* Loan Approval Modal */}
+        {selectedCarForLoan && (
+          <div 
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(4px)',
+              marginTop: "70px"
+            }}
+            onClick={closeLoanModal}
           >
-            {selectedIds.length >= 2 ? `Compare (${selectedIds.length})` : 'Select 2 cars to Compare'}
-          </Button>
-        </div>
-      </div>
+            <div 
+              style={{
+                background: '#fdfdfd',
+                borderRadius: '24px',
+                padding: '32px',
+                maxWidth: '480px',
+                width: '90%',
+                margin: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <h3 style={{ color: '#1a1a1a', fontSize: '24px', fontWeight: '600', margin: 0 }}>
+                  Loan Approval Check
+                </h3>
+                <button
+                  onClick={closeLoanModal}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#666',
+                    fontSize: '32px',
+                    cursor: 'pointer',
+                    lineHeight: '1'
+                  }}
+                >
+                  ×
+                </button>
+              </div>
 
-      {/* Floating compare button when two selected */}
-      {selectedIds.length >= 2 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-3">
-          <div className="flex items-center bg-black/40 rounded-full px-3 py-2 text-sm text-white/90 shadow-md">
-            Selected: <span className="ml-2 font-bold">{selectedIds.length}</span>
+              <div style={{ marginBottom: '24px' }}>
+                <h4 style={{ color: '#1a1a1a', marginBottom: '8px', fontSize: '18px', fontWeight: '600' }}>
+                  {selectedCarForLoan.year} {selectedCarForLoan.make} {selectedCarForLoan.model}
+                </h4>
+                <p style={{ color: '#666', fontSize: '14px', margin: 0 }}>
+                  MSRP: ${selectedCarForLoan.financing.msrp.toLocaleString()}
+                </p>
+              </div>
+
+              {loanLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
+                  <Loader2 style={{ width: '32px', height: '32px', color: '#8b1538', animation: 'spin 1s linear infinite' }} />
+                  <span style={{ marginLeft: '12px', color: '#1a1a1a' }}>Checking approval...</span>
+                </div>
+              ) : loanPrediction ? (
+                <div style={{
+                  padding: '24px',
+                  borderRadius: '16px',
+                  border: `2px solid ${loanPrediction.approved ? '#22c55e' : '#ef4444'}`,
+                  background: loanPrediction.approved ? 'rgba(34, 197, 94, 0.05)' : 'rgba(239, 68, 68, 0.05)'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                    {loanPrediction.approved ? (
+                      <CheckCircle style={{ width: '32px', height: '32px', color: '#22c55e' }} />
+                    ) : (
+                      <XCircle style={{ width: '32px', height: '32px', color: '#ef4444' }} />
+                    )}
+                    <div>
+                      <p style={{
+                        fontSize: '20px',
+                        fontWeight: '700',
+                        color: loanPrediction.approved ? '#16a34a' : '#dc2626',
+                        margin: 0
+                      }}>
+                        {loanPrediction.approved ? "Loan Approved!" : "Loan Not Approved"}
+                      </p>
+                      <p style={{ color: '#666', fontSize: '13px', marginTop: '4px', margin: '4px 0 0 0' }}>
+                        {Math.round(loanPrediction.probability * 100)}% probability
+                      </p>
+                    </div>
+                  </div>
+                  <p style={{ color: '#1a1a1a', fontSize: '14px', marginBottom: '16px' }}>
+                    {loanPrediction.reason}
+                  </p>
+                  <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', fontSize: '13px' }}>
+                      <div>
+                        <p style={{ color: '#666', margin: '0 0 4px 0' }}>Score</p>
+                        <p style={{ color: '#1a1a1a', fontWeight: '600', margin: 0 }}>{loanPrediction.score}</p>
+                      </div>
+                      <div>
+                        <p style={{ color: '#666', margin: '0 0 4px 0' }}>Probability</p>
+                        <p style={{ color: '#1a1a1a', fontWeight: '600', margin: 0 }}>{Math.round(loanPrediction.probability * 100)}%</p>
+                      </div>
+                    </div>
+                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                      <p style={{ color: '#999', fontSize: '12px', margin: 0 }}>
+                        Loan Amount: ${selectedCarForLoan.financing.msrp.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div style={{ marginTop: '24px' }}>
+                <button
+                  onClick={closeLoanModal}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: '#e8e8e8',
+                    color: '#1a1a1a',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#d8d8d8')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#e8e8e8')}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
-          <Button onClick={() => onCompare && onCompare()} className="italic px-6 py-3 bg-gradient-to-r from-primary to-primary/80">
-            Compare ({selectedIds.length})
-          </Button>
+        )}
+
+        {/* Pagination Controls */}
+        <div style={{ marginTop: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => setCurrentPage(p => p - 1)}
+            disabled={!pagination?.has_prev}
+            style={{
+              padding: '10px 24px',
+              background: pagination?.has_prev ? '#e3000d' : '#e8e8e8',
+              color: pagination?.has_prev ? '#fff' : '#999',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: pagination?.has_prev ? 'pointer' : 'not-allowed',
+              boxShadow: pagination?.has_prev ? '0 2px 8px rgba(139, 21, 56, 0.2)' : 'none'
+            }}
+          >
+            Previous
+          </button>
+          <div style={{ color: '#1a1a1a', fontSize: '14px' }}>
+            Page {pagination?.page} of {pagination?.total_pages}
+          </div>
+          <button
+            onClick={() => setCurrentPage(p => p + 1)}
+            disabled={!pagination?.has_next}
+            style={{
+              padding: '10px 24px',
+              background: pagination?.has_next ? '#e3000d' : '#e8e8e8',
+              color: pagination?.has_next ? '#fff' : '#999',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: pagination?.has_next ? 'pointer' : 'not-allowed',
+              boxShadow: pagination?.has_next ? '0 2px 8px rgba(139, 21, 56, 0.2)' : 'none'
+            }}
+          >
+            Next
+          </button>
         </div>
-      )}
-    </div>
+
+        {/* Floating compare button */}
+        {selectedIds.length >= 2 && (
+          <div style={{
+            position: 'fixed',
+            bottom: '32px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px'
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: '#fdfdfd',
+              borderRadius: '24px',
+              padding: '8px 16px',
+              fontSize: '14px',
+              color: '#1a1a1a',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+              fontWeight: '500'
+            }}>
+              Selected: <span style={{ marginLeft: '8px', fontWeight: '700', color: '#8b1538' }}>{selectedIds.length}</span>
+            </div>
+            <button
+              onClick={() => onCompare && onCompare()}
+              style={{
+                padding: '12px 24px',
+                background: '#e300d',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '24px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(139, 21, 56, 0.3)',
+                transition: 'transform 0.2s ease'
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+            >
+              Compare ({selectedIds.length})
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }
