@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useNavigate } from "react-router-dom";
+import Background from "./background3.png";
 
 interface QuizProps {
   onComplete?: (answers: QuizAnswers) => void;
@@ -38,32 +39,23 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
     if (step < 7) {
       setStep(step + 1);
     } else {
-      // Normalize city and state to lowercase before completing
       const normalizedAnswers = {
         ...answers,
         city: answers.city.trim().toLowerCase(),
         state: answers.state.trim().toLowerCase(),
       };
-      
-      // Save to global variable
+
       (window as any).quizAnswers = normalizedAnswers;
-      
-      console.log("Quiz completed with answers:", normalizedAnswers);
-      
-      // Call onComplete if provided, but don't let it block navigation
+
       if (onComplete) {
         try {
           onComplete(normalizedAnswers);
         } catch (error) {
-          console.error("Error in onComplete:", error);
+          console.error(error);
         }
       }
-      
-      // Navigate after a small delay to ensure state updates
-      setTimeout(() => {
-        console.log("Navigating to home...");
-        navigate("/");
-      }, 100);
+
+      setTimeout(() => navigate("/"), 100);
     }
   };
 
@@ -103,20 +95,49 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden m-0 p-0 bg-gradient-to-br from-black via-gray-900 to-black">
-      {/* animated background */}
-      <div className="fixed inset-0 bg-[linear-gradient(rgba(139,21,56,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,21,56,0.03)_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
+    <div className="fixed inset-0 w-screen h-screen overflow-hidden m-0 p-0">
 
+      {/* === PAGE BACKGROUND IMAGE === */}
+      <div
+        className="absolute inset-0 bg-center bg-contain bg-no-repeat"
+        style={{
+          backgroundImage: `url(${Background})`,
+          backgroundSize: "cover",
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0 bg-black/70" />
+      </div>
+
+      {/* === MAIN CONTENT WRAPPER === */}
       <div className="relative z-10 h-full flex items-center justify-center px-4">
-        {/* CARD WRAPPER */}
-        <div className="w-full max-w-xs min-h-[800px] flex flex-col justify-center">
+
+        {/* ✅ ✅ UNDERLAY added — blocks ALL background image bleed */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="
+            w-full
+            max-w-[180px]
+            min-h-[95vh]
+            rounded-3xl
+            bg-white
+            shadow-2xl
+          " />
+        </div>
+
+        {/* ✅ ✅ END UNDERLAY */}
+
+        {/* === QUIZ COLUMN === */}
+        <div className="w-full max-w-[380px] min-h-[800px] flex flex-col justify-center relative z-20">
+
+
           {/* Progress Bar */}
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-gray-400 mb-2 italic text-center">
+          <div className="mb-6 rounded-lg p-3 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+            <div className="flex justify-between text-sm text-gray-700 mb-2 font-medium">
               <span>Step {step} of 7</span>
               <span>{Math.round((step / 7) * 100)}%</span>
             </div>
-            <div className="w-full bg-gray-800 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-2">
               <div
                 className="bg-primary h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(step / 7) * 100}%` }}
@@ -131,41 +152,51 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-black/95 backdrop-blur-sm rounded-2xl p-10 md:p-12 border border-gray-800/50 shadow-2xl flex flex-col justify-between min-h-[700px]"
+            className="rounded-2xl p-10 md:p-12 border-2 border-gray-300 shadow-2xl flex flex-col justify-between min-h-[700px] relative z-20"
+            style={{ backgroundColor: "#ffffff", opacity: 1 }}
           >
-            {/* ==== STEP CONTENT ==== */}
+            {/* STEP CONTENT */}
             <div className="flex flex-col justify-center text-center flex-1">
-              {/* Step 1 */}
+
               {step === 1 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    What's your annual income?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">
-                    This helps us recommend cars within your budget.
-                  </p>
-                  <Label htmlFor="income" className="text-white italic block mb-2">
-                    Annual Income ($)
-                  </Label>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      What's your annual income?
+                    </h2>
+                  </div>
+
+                  <p className="text-gray-600 mb-6 text-sm">This helps us recommend cars within your budget.</p>
+
+                  <Label htmlFor="income" className="text-primary block mb-2">Annual Income ($)</Label>
                   <Input
                     id="income"
                     type="number"
                     placeholder="e.g., 75000"
                     value={answers.annualIncome}
                     onChange={(e) => updateAnswer("annualIncome", e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white italic text-center"
+                    className="bg-white border-gray-300 text-primary text-center placeholder:text-gray-600"
                   />
                 </>
               )}
 
+              {/* ✅ Other steps unchanged – just solid text now */}
               {/* Step 2: Credit Score */}
               {step === 2 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    What's your credit score?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This affects your financing options.</p>
-                  <Label htmlFor="credit" className="text-white italic block mb-2">Credit Score (300-850)</Label>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      What's your credit score?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This affects your financing options.</p>
+                  <Label htmlFor="credit" className="text-primary block mb-2">Credit Score (300-850)</Label>
                   <Input
                     id="credit"
                     type="number"
@@ -174,7 +205,7 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
                     max="850"
                     value={answers.creditScore}
                     onChange={(e) => updateAnswer("creditScore", e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white italic text-center"
+                    className="bg-white border-gray-300 text-primary text-center placeholder:text-gray-600"
                   />
                 </>
               )}
@@ -182,28 +213,35 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               {/* Step 3: College Graduate */}
               {step === 3 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    Are you a college graduate?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This helps us understand your profile better.</p>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      Are you a college graduate?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This helps us understand your profile better.</p>
                   <div className="space-y-3">
                     <Button
                       onClick={() => updateAnswer("isCollegeGrad", true)}
-                      className={`w-full p-4 text-base italic rounded-xl ${
+                      className={`w-full p-4 text-base rounded-full ${
                         answers.isCollegeGrad === true
-                          ? "bg-primary text-white"
-                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
+                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
                       }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       Yes, I'm a college graduate
                     </Button>
                     <Button
                       onClick={() => updateAnswer("isCollegeGrad", false)}
-                      className={`w-full p-4 text-base italic rounded-xl ${
+                      className={`w-full p-4 text-base rounded-full ${
                         answers.isCollegeGrad === false
-                          ? "bg-primary text-white"
-                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
+                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
                       }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       No, I'm not a college graduate
                     </Button>
@@ -214,28 +252,35 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               {/* Step 4: Self Employed */}
               {step === 4 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    Are you self-employed?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This affects financing documentation requirements.</p>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      Are you self-employed?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This affects financing documentation requirements.</p>
                   <div className="space-y-3">
                     <Button
                       onClick={() => updateAnswer("isSelfEmployed", true)}
-                      className={`w-full p-4 text-base italic rounded-xl ${
+                      className={`w-full p-4 text-base rounded-full ${
                         answers.isSelfEmployed === true
-                          ? "bg-primary text-white"
-                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
+                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
                       }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       Yes, I'm self-employed
                     </Button>
                     <Button
                       onClick={() => updateAnswer("isSelfEmployed", false)}
-                      className={`w-full p-4 text-base italic rounded-xl ${
+                      className={`w-full p-4 text-base rounded-full ${
                         answers.isSelfEmployed === false
-                          ? "bg-primary text-white"
-                          : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50"
+                          ? "bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-white shadow-lg shadow-primary/30 border border-primary/50"
+                          : "bg-white border-2 border-gray-300 text-black hover:bg-gray-50"
                       }`}
+                      style={{ fontFamily: "Inter, sans-serif" }}
                     >
                       No, I'm not self-employed
                     </Button>
@@ -246,18 +291,23 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               {/* Step 5: City */}
               {step === 5 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    What city do you live in?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This helps us find local dealers and pricing.</p>
-                  <Label htmlFor="city" className="text-white italic block mb-2">City</Label>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      What city do you live in?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This helps us find local dealers and pricing.</p>
+                  <Label htmlFor="city" className="text-primary block mb-2">City</Label>
                   <Input
                     id="city"
                     type="text"
                     placeholder="e.g., Dallas"
                     value={answers.city}
                     onChange={(e) => updateAnswer("city", e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white italic text-center"
+                    className="bg-white border-gray-300 text-primary text-center placeholder:text-gray-600"
                   />
                 </>
               )}
@@ -265,18 +315,23 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               {/* Step 6: State */}
               {step === 6 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    What state do you live in?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This helps us find local dealers and pricing.</p>
-                  <Label htmlFor="state" className="text-white italic block mb-2">State</Label>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      What state do you live in?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This helps us find local dealers and pricing.</p>
+                  <Label htmlFor="state" className="text-primary block mb-2">State</Label>
                   <Input
                     id="state"
                     type="text"
                     placeholder="e.g., Texas"
                     value={answers.state}
                     onChange={(e) => updateAnswer("state", e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white italic text-center"
+                    className="bg-white border-gray-300 text-primary text-center placeholder:text-gray-600"
                   />
                 </>
               )}
@@ -284,18 +339,23 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               {/* Step 7: Miles Per Week */}
               {step === 7 && (
                 <>
-                  <h2 className="text-2xl font-bold text-white mb-2 italic" style={{ fontFamily: "Saira, sans-serif" }}>
-                    How many miles do you drive per week?
-                  </h2>
-                  <p className="text-gray-400 mb-6 text-sm italic">This helps us recommend cars with appropriate fuel efficiency.</p>
-                  <Label htmlFor="miles" className="text-white italic block mb-2">Miles per Week</Label>
+                  <div className="rounded-lg p-4 mb-4 shadow-lg" style={{ backgroundColor: "#ffffff", opacity: 1 }}>
+                    <h2
+                      className="text-3xl md:text-4xl font-bold text-primary"
+                      style={{ fontFamily: "Inter, sans-serif", fontWeight: 900 }}
+                    >
+                      How many miles do you drive per week?
+                    </h2>
+                  </div>
+                  <p className="text-gray-600 mb-6 text-sm">This helps us recommend cars with appropriate fuel efficiency.</p>
+                  <Label htmlFor="miles" className="text-primary block mb-2">Miles per Week</Label>
                   <Input
                     id="miles"
                     type="number"
                     placeholder="e.g., 200"
                     value={answers.milesPerWeek}
                     onChange={(e) => updateAnswer("milesPerWeek", e.target.value)}
-                    className="bg-gray-800/50 border-gray-700 text-white italic text-center"
+                    className="bg-white border-gray-300 text-primary text-center placeholder:text-gray-600"
                   />
                 </>
               )}
@@ -305,8 +365,8 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
             <div className="flex gap-4 mt-8">
               <Button
                 onClick={handleBack}
-                variant="outline"
-                className="flex-1 p-4 text-base italic rounded-xl border-gray-700 text-white hover:bg-gray-800/50"
+                className="flex-1 p-4 text-base rounded-full bg-white border-2 border-gray-300 text-gray-800 hover:bg-gray-50"
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {step === 1 ? "Back" : "Previous"}
@@ -315,7 +375,8 @@ export function Quiz({ onComplete, onBack }: QuizProps) {
               <Button
                 onClick={handleNext}
                 disabled={!canProceed()}
-                className="flex-1 p-4 text-base bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary/70 italic rounded-xl text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 p-4 text-base bg-gradient-to-r from-primary via-primary/90 to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-full text-white shadow-lg shadow-primary/30 border border-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ fontFamily: "Inter, sans-serif" }}
               >
                 {step === 7 ? "Complete" : "Next"}
                 {step < 7 && <ArrowRight className="w-4 h-4 ml-2" />}
