@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Grid3x3 } from "lucide-react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
-import Background from "./background.png"; // new import
+import Background from "./landing.png"; // new import
 
 
 interface LandingPageProps {
