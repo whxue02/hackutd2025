@@ -101,8 +101,8 @@ function MainApp() {
                 <CarIcon className="w-7 h-7 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.6)]" />
               </div>
               <div>
-                <h1 className="text-white italic tracking-wide" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>CAR MATCH</h1>
-                <p className="text-gray-400 italic">Find your perfect ride</p>
+                <h1 className="text-white italic tracking-wide" style={{ fontFamily: 'Saira, sans-serif', fontStyle: 'italic' }}>AutoMatch</h1>
+                <p className="text-gray-400 italic">Find YOUR Ride-or-Die</p>
               </div>
             </div>
             
