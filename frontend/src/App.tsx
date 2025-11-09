@@ -368,7 +368,7 @@ function MainApp() {
         style={{
           right: '1.5rem',
           bottom: '1.5rem',
-          backgroundColor: 'rgb(139,21,56)',
+          backgroundColor: '#e3000d',
           padding: 'calc(var(--spacing) * 1.5)',
         }}
         role="group"
