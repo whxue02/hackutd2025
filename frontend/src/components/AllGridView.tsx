@@ -571,7 +571,7 @@ export function AllGridView({ selectedIds = [], onToggleSelect, onCompare, quizA
               onClick={() => onCompare && onCompare()}
               style={{
                 padding: '12px 24px',
-                background: '#e300d',
+                background: '#e3000d',
                 color: '#fff',
                 border: 'none',
                 borderRadius: '24px',
