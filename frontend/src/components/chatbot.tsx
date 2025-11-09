@@ -8,8 +8,12 @@ interface Message {
   timestamp: Date;
 }
 
-export function ChatbotPopup() {
-  const [isOpen, setIsOpen] = useState(false);
+interface ChatbotPopupProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+export function ChatbotPopup({ isOpen, setIsOpen }: ChatbotPopupProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -44,17 +48,45 @@ export function ChatbotPopup() {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate bot response (replace with actual API call)
-    setTimeout(() => {
+    try {
+      const response = await fetch("http://127.0.0.1:5000/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: inputValue }),
+      });
+
+      const data = await response.json();
+
+      let botText = data.answer;
+
+      // Add hyperlink to first car if available
+      if (data.relevant_cars && data.relevant_cars.length > 0) {
+        const firstCar = data.relevant_cars[0];
+        const carLink = `http://localhost:3000/car/${firstCar.hack_id})`;
+        
+        botText += `\n\n🚗 [${firstCar.hack_id}](${carLink})\n${firstCar.description}`;
+      }
+
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I'm here to help you find the perfect car! What features are you looking for?",
+        text: botText,
         sender: "bot",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "Sorry, I encountered an error. Please try again.",
+        sender: "bot",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -64,126 +96,127 @@ export function ChatbotPopup() {
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <>
-      {/* Chat Window */}
-      {isOpen && (
-        <div
-          className="fixed bottom-24 right-6 z-50 bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-700 rounded-2xl shadow-2xl shadow-primary/20"
-          style={{
-            width: "400px",
-            height: "600px",
-            maxHeight: "calc(100vh - 120px)",
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gradient-to-r from-primary/20 to-primary/10 rounded-t-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
-                <MessageCircle className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-white font-semibold italic" style={{ fontFamily: 'Saira, sans-serif' }}>
-                  Car Assistant
-                </h3>
-                <p className="text-xs text-gray-400 italic">Online now</p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+    <div
+      className="fixed right-6 z-[9999] bg-gradient-to-br from-gray-900 via-gray-800 to-black border border-gray-700 rounded-2xl shadow-2xl shadow-primary/20 flex flex-col"
+      style={{
+        width: "400px",
+        height: "600px",
+        bottom: "90px",
+        maxHeight: "calc(100vh - 110px)",
+      }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gradient-to-r from-primary/20 to-primary/10 rounded-t-2xl">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center">
           </div>
-
-          {/* Messages */}
-          <div className="h-[calc(100%-140px)] overflow-y-auto p-4 space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 ${
-                    message.sender === "user"
-                      ? "bg-gradient-to-r from-primary to-primary/80 text-white"
-                      : "bg-gray-800 text-gray-200 border border-gray-700"
-                  }`}
-                >
-                  <p className="text-sm italic">{message.text}</p>
-                  <span className="text-xs opacity-70 mt-1 block">
-                    {message.timestamp.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              </div>
-            ))}
-
-            {/* Typing Indicator */}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3">
-                  <div className="flex gap-1">
-                    <div
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    ></div>
-                    <div
-                      className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm rounded-b-2xl">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type your message..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white text-sm italic placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
-              />
-              <button
-                onClick={handleSendMessage}
-                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white rounded-xl px-4 py-2 transition-all shadow-lg shadow-primary/30"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </div>
+          <div>
+            <h3 className="text-white font-semibold italic" style={{ fontFamily: 'Saira, sans-serif' }}>
+              Car Assistant
+            </h3>
+            <p className="text-xs text-gray-400 italic">Online now</p>
           </div>
         </div>
-      )}
+        <button
+          onClick={() => setIsOpen(false)}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      </div>
 
-      {/* Toggle Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary via-primary/90 to-primary/70 shadow-lg shadow-primary/40 flex items-center justify-center transition-all hover:scale-110 border border-primary/50 ${
-          isOpen ? "rotate-0" : ""
-        }`}
-      >
-        {isOpen ? (
-          <X className="w-6 h-6 text-white" />
-        ) : (
-          <MessageCircle className="w-6 h-6 text-white" />
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+          key={message.id}
+          className={`flex w-full ${
+            message.sender === "user" ? "justify-end text-right" : "justify-start text-left"
+          }`}
+        >
+            <div
+              className={`max-w-[75%] rounded-2xl px-4 py-2 ${
+                message.sender === "user"
+                  ? "bg-gradient-to-r from-primary to-primary/80 text-white"
+                  : "bg-gray-800 text-gray-200 border border-gray-700"
+              }`}
+            >
+              <div className="text-sm italic whitespace-pre-line">
+                {message.text.split(/(\[.*?\]\(.*?\))/).map((part, idx) => {
+                  const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
+                  if (linkMatch) {
+                    return (
+                      <a
+                        key={idx}
+                        href={`${linkMatch[2]})`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 underline font-semibold inline-flex items-center gap-1 transition-colors"
+                      >
+                        {linkMatch[1]}
+                      </a>
+                    );
+                  }
+                  return <span key={idx}>{part}</span>;
+                })}
+              </div>
+              <span className="text-xs opacity-70 mt-1 block">
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          </div>
+        ))}
+
+        {/* Typing Indicator */}
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-gray-800 border border-gray-700 rounded-2xl px-4 py-3">
+              <div className="flex gap-1">
+                <div
+                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                ></div>
+                <div
+                  className="w-2 h-2 bg-gray-500 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                ></div>
+              </div>
+            </div>
+          </div>
         )}
-      </button>
-    </>
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input */}
+      <div className="p-4 border-t border-gray-700 bg-gray-900/95 backdrop-blur-sm">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Type your message..."
+            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2 text-white text-sm italic placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+          <button
+            onClick={handleSendMessage}
+            className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white rounded-xl px-4 py-2 transition-all shadow-lg shadow-primary/30"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

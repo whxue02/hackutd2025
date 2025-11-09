@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { ChatbotPopup } from "./components/Chatbot";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { Car } from "./types/car";
 import { carData } from "./data/cars";
@@ -26,15 +27,15 @@ function MainApp() {
   const [selectedCarsForComparison, setSelectedCarsForComparison] = useState<Car[]>([]);
   const [quizAnswers, setQuizAnswers] = useState<QuizAnswers | null>(null);
 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   // ===== Added: states for chat/trade button activations =====
   const [chatRequested, setChatRequested] = useState(false);
   const [tradeInRequested, setTradeInRequested] = useState(false);
 
   // ===== Added: handlers for the two floating buttons (no modal implementation) =====
   const handleOpenChatbot = () => {
-    console.log("Chatbot button clicked");
-    setChatRequested(true);
-    // Placeholder: open chatbot modal here
+    setIsChatOpen(true);
   };
 
   const handleOpenTradeIn = () => {
@@ -251,6 +252,9 @@ function MainApp() {
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+
+          {/* Chatbot Popup Component */}
+          <ChatbotPopup isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
         </div>
       </div>
 
