@@ -5,10 +5,16 @@ import requests
 from google.cloud import firestore
 import json
 
+load_dotenv()
+
 db = firestore.Client(
     project="hackutd2025-477622",
     database="hackutd25"
 )
+
+ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELE_AGENT_ID = os.getenv("ELE_AGENT_ID")  # ElevenLabs agent id
+ELE_AGENT_PHONE_NUMBER_ID = os.getenv("ELE_AGENT_PHONE_NUMBER_ID")  # phone number configured in ElevenLabs/Twilio
 
 def escape_slash(s):
     if s is None:
@@ -21,6 +27,52 @@ app = Flask(__name__)
 
 from flask_cors import CORS
 CORS(app)
+
+@app.route('/dealer-call', methods=['POST'])
+def outbound_call():
+    try:
+        data = request.get_json()
+    except:
+        data = None
+
+    if data is None:
+        return {"error": "No data provided"}, 400
+
+    try:
+        phone_number = data["phone_number"]
+        print(phone_number)
+    except Exception as e:
+        print(e)
+        return {"error": "Missing data"}, 400
+
+    # Make outbound call via third-party service
+    # (Implementation depends on the service being used)
+    # For example, using Twilio or any other service
+    url = "https://api.elevenlabs.io/v1/convai/twilio/outbound-call"
+
+    payload = {
+        "agent_id": ELE_AGENT_ID,
+        "agent_phone_number_id": ELE_AGENT_PHONE_NUMBER_ID,
+        "to_number": phone_number,
+        # optional: "call_params": {"first_name": "Alice", "lead_id": "1234"}  # pass custom variables to agent
+    }
+
+    headers = {
+        "xi-api-key": ELEVEN_API_KEY,
+        "Content-Type": "application/json"
+    }
+
+    resp = requests.post(url, headers=headers, json=payload, timeout=30)
+    try:
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        print("Error:", resp.status_code, resp.text)
+        raise
+
+    data = resp.json()
+    print("Created outbound call:", json.dumps(data, indent=2))
+
+    return {"message": "Call initiated"}, 200
 
 @app.route('/data/cars', methods=['GET'])
 def get_cars():
@@ -450,7 +502,7 @@ def predict_loan():
     
     try:
         # Extract quiz answers and car price
-        income_annum = float(data.get("annualIncome", 0"))
+        income_annum = float(data.get("annualIncome", 0))
         credit_score = int(data.get("creditScore", 0))
         is_college_grad = 1 if data.get("isCollegeGrad") else 0
         is_self_employed = 1 if data.get("isSelfEmployed") else 0
@@ -474,6 +526,8 @@ def predict_loan():
     except Exception as e:
         print(f"Error in loan prediction: {e}")
         return {"error": str(e)}, 500
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
