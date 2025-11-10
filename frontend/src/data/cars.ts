@@ -7,7 +7,7 @@ export const carData: Car[] = [
     model: "4Runner",
     year: 2020,
     category: "SUV",
-    image: "http://127.0.0.1:5000/images/b8187e469a4b44949114cf4e99cf10e1.jpeg",
+    image: "http://127.0.0.1:5000/images/a34c4a4478a144d98cbfbdcfa24f656e.jpeg",
     specs: {
       engine: "4L V6",
       horsepower: 270,
@@ -55,7 +55,7 @@ export const carData: Car[] = [
     model: "4Runner",
     year: 2020,
     category: "SUV",
-    image: "http://127.0.0.1:5000/images/6f2aa65a2ef440bf9f39997bada1575b.jpeg",
+    image: "http://127.0.0.1:5000/images/92b2ec64da6947aeb7aa8e5540894b45.jpeg",
     specs: {
       engine: "3.5L V6 EcoBoost",
       horsepower: 400,
@@ -79,7 +79,7 @@ export const carData: Car[] = [
     model: "Camry",
     year: 2024,
     category: "Sedan",
-    image: "http://127.0.0.1:5000/images/c77336b80c984ed0a4f7913c5222adef.jpeg",
+    image: "http://127.0.0.1:5000/images/417d36a059ed45c49cd0830560bbda22.jpeg",
     specs: {
       engine: "1.5L Turbo 4-Cylinder",
       horsepower: 190,
@@ -103,7 +103,7 @@ export const carData: Car[] = [
     model: "Land Cruiser",
     year: 2020,
     category: "SUV",
-    image: "http://127.0.0.1:5000/images/99c54f9099144857b99159ce416f8fdf.jpeg",
+    image: "http://127.0.0.1:5000/images/d8ab0da671b341af8c83878f64e17a9a.jpeg",
     specs: {
       engine: "2.0L Turbo 4-Cylinder",
       horsepower: 255,

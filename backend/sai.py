@@ -8,7 +8,7 @@ import json
 load_dotenv()
 
 db = firestore.Client(
-    project="hackutd2025-477622",
+    project="hackutd2025-477718",
     database="hackutd25"
 )
 
